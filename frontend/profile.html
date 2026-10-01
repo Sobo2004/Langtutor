@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — LangTutor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background:#f5f7fa; min-height:100vh; }
+    body.modal-open { overflow:hidden; }
+
+    .header {
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff; padding:20px 32px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .header h1 { font-size:22px; }
+    .nav-links a { color:#fff; text-decoration:none; margin-left:20px; font-size:14px; opacity:0.85; }
+    .nav-links a:hover { opacity:1; text-decoration:underline; }
+
+    .container { max-width:900px; margin:32px auto; padding:0 24px; }
+
+    /* Profile header card */
+    .profile-header {
+      background:#fff; border-radius:14px; padding:32px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.07); margin-bottom:24px;
+      text-align:center;
+    }
+    .avatar-large {
+      width:180px; height:180px; border-radius:50%;
+      background:white;
+      display:flex; align-items:center; justify-content:center;
+      font-size:100px; font-weight:400;
+      margin:0 auto 16px;
+      line-height:1;
+      box-shadow:0 4px 20px rgba(0,0,0,0.15);
+      border:4px solid #667eea;
+      cursor:pointer;
+      user-select:none;
+    }
+    .profile-header h2 { font-size:24px; color:#333; margin-bottom:6px; }
+    .profile-header .meta { color:#888; font-size:14px; }
+
+    /* Sections */
+    .card {
+      background:#fff; border-radius:14px; padding:24px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.07); margin-bottom:20px;
+    }
+    .card h3 {
+      font-size:18px; color:#333; margin-bottom:18px;
+      padding-bottom:12px; border-bottom:2px solid #f0f0f0;
+    }
+
+    .setting-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 0; border-bottom:1px solid #f5f5f5;
+      gap:12px;
+    }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-row .label { color:#333; font-weight:500; font-size:14px; }
+    .setting-row .value { color:#888; font-size:14px; }
+    .setting-row input[type="text"], .setting-row input[type="email"] {
+      padding:8px 12px; border:1px solid #ddd; border-radius:6px;
+      font-size:14px; width:250px;
+    }
+    .setting-row button {
+      padding:8px 16px; border:none; border-radius:6px;
+      font-size:13px; font-weight:600; cursor:pointer;
+      white-space:nowrap;
+    }
+    .btn-primary { background:#667eea; color:#fff; }
+    .btn-primary:hover { background:#5568d3; }
+    .btn-secondary { background:#f0f0f0; color:#666; }
+    .btn-secondary:hover { background:#e0e0e0; }
+    .btn-danger { background:#dc3545; color:#fff; }
+    .btn-danger:hover { background:#c82333; }
+
+    /* Difficulty selector */
+    .difficulty-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .difficulty-card {
+      border:2px solid #e0e0e0; border-radius:10px; padding:16px;
+      text-align:center; cursor:pointer; transition:all 0.2s;
+    }
+    .difficulty-card:hover { border-color:#667eea; background:#f8f9ff; }
+    .difficulty-card.active { border-color:#667eea; background:#f0f2ff; }
+    .difficulty-card .icon { font-size:28px; margin-bottom:8px; }
+    .difficulty-card .title { font-weight:600; color:#333; font-size:14px; margin-bottom:4px; }
+    .difficulty-card .desc { font-size:12px; color:#888; }
+
+    /* Daily goal */
+    .goal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .goal-card {
+      border:2px solid #e0e0e0; border-radius:10px; padding:14px;
+      text-align:center; cursor:pointer; transition:all 0.2s;
+    }
+    .goal-card:hover { border-color:#667eea; background:#f8f9ff; }
+    .goal-card.active { border-color:#667eea; background:#f0f2ff; }
+    .goal-card .time { font-size:20px; font-weight:700; color:#333; }
+    .goal-card .label { font-size:12px; color:#888; margin-top:4px; }
+
+    /* Generic modal (Terms/Privacy/Password) */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; padding:20px; }
+    .modal.open { display:flex; }
+    .modal-content {
+      background:#fff; border-radius:14px; padding:32px;
+      max-width:700px; width:90%; max-height:80vh; overflow-y:auto;
+    }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:22px; color:#333; margin:0; }
+    .close-btn { background:none; border:none; font-size:28px; cursor:pointer; color:#999; }
+    .modal-content p { color:#555; line-height:1.6; margin-bottom:12px; font-size:14px; }
+    .modal-content h4 { color:#333; margin-top:20px; margin-bottom:10px; font-size:16px; }
+
+    .success-msg {
+      background:#d4edda; color:#155724; padding:12px 16px; border-radius:8px;
+      margin-top:12px; font-size:14px; display:none;
+    }
+    .success-msg.show { display:block; }
+
+    /* ✅ Email error message */
+    .error-msg{
+      background:#f8d7da;
+      color:#721c24;
+      padding:12px 16px;
+      border-radius:8px;
+      margin-top:12px;
+      font-size:14px;
+      display:none;
+    }
+    .error-msg.show{ display:block; }
+
+    /* Password modal form */
+    .form-group { margin-bottom:12px; }
+    .form-group label { display:block; font-size:13px; color:#333; font-weight:600; margin-bottom:6px; }
+    .form-group input {
+      width:100%;
+      padding:10px 12px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      font-size:14px;
+    }
+    .modal-actions {
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    /* ✅ Avatar modal */
+    .avatar-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.6);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .avatar-modal.open{ display:flex; }
+
+    .avatar-modal-card{
+      background:#fff;
+      border-radius:16px;
+      width:min(720px, 92vw);
+      padding:22px;
+      box-sizing:border-box;
+      overflow:hidden;
+    }
+
+    .avatar-modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    .avatar-modal-header h3{
+      margin:0;
+      font-size:20px;
+      color:#222;
+    }
+    .avatar-close{
+      background:none;
+      border:none;
+      font-size:28px;
+      cursor:pointer;
+      color:#777;
+      line-height:1;
+    }
+
+    .avatar-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+      gap:10px;
+      max-height:360px;
+      overflow-y:auto;
+      padding:8px 6px 8px 2px;
+    }
+    .avatar-grid button{
+      height:56px;
+      width:56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:30px;
+      border:2px solid transparent;
+      border-radius:12px;
+      cursor:pointer;
+      background:white;
+      outline:none;
+      flex-shrink:0;
+    }
+    .avatar-grid button:hover{
+      border-color:#c9d0ff;
+      background:#f7f8ff;
+    }
+
+    .avatar-save{
+      width:100%;
+      margin-top:14px;
+      padding:12px;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:white;
+      border:none;
+      border-radius:10px;
+      font-size:16px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1><span id="headerAvatar">👤</span> My Profile</h1>
+  <div class="nav-links">
+    <a href="/">← Chat</a>
+    <a href="/progress">📈 Progress</a>
+    <a href="/leaderboard">🏆 Leaderboard</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="profile-header">
+    <div class="avatar-large" id="profileAvatar" onclick="openAvatarPicker()" title="Click to change avatar">U</div>
+    <h2 id="profileUsername">Username</h2>
+    <div class="meta">Member since <span id="memberSince">—</span></div>
+  </div>
+
+  <div class="card">
+    <h3>🎯 Learning Preferences</h3>
+
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-weight:600;color:#333;margin-bottom:12px;">Difficulty Level</label>
+      <div class="difficulty-grid">
+        <div class="difficulty-card" data-level="beginner" onclick="selectDifficulty('beginner')">
+          <div class="icon">🌱</div>
+          <div class="title">Beginner</div>
+          <div class="desc">Basic words & phrases</div>
+        </div>
+        <div class="difficulty-card" data-level="intermediate" onclick="selectDifficulty('intermediate')">
+          <div class="icon">⚡</div>
+          <div class="title">Intermediate</div>
+          <div class="desc">Translation practice</div>
+        </div>
+        <div class="difficulty-card" data-level="advanced" onclick="selectDifficulty('advanced')">
+          <div class="icon">🔥</div>
+          <div class="title">Advanced</div>
+          <div class="desc">Sentence building</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label style="display:block;font-weight:600;color:#333;margin-bottom:12px;">Daily Learning Goal</label>
+      <div class="goal-grid">
+        <div class="goal-card" data-goal="5" onclick="selectGoal(5)">
+          <div class="time">5 min</div>
+          <div class="label">Casual</div>
+        </div>
+        <div class="goal-card" data-goal="10" onclick="selectGoal(10)">
+          <div class="time">10 min</div>
+          <div class="label">Regular</div>
+        </div>
+        <div class="goal-card" data-goal="15" onclick="selectGoal(15)">
+          <div class="time">15 min</div>
+          <div class="label">Serious</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="success-msg" id="prefSuccess">✅ Preferences saved!</div>
+  </div>
+
+  <div class="card">
+    <h3>📝 Personal Details</h3>
+    <div class="setting-row">
+      <div class="label">Username</div>
+      <div class="value" id="displayUsername">—</div>
+    </div>
+    <div class="setting-row">
+      <div class="label">Email</div>
+      <div class="value" id="displayEmail">—</div>
+    </div>
+    <div class="setting-row">
+      <div class="label">Update Email</div>
+      <input type="email" id="emailInput" placeholder="your@email.com">
+      <button class="btn-primary" onclick="updateEmail()">Save</button>
+    </div>
+    <div class="success-msg" id="emailSuccess">✅ Email updated!</div>
+    <div class="error-msg" id="emailError">❌ Invalid email address</div>
+  </div>
+
+  <div class="card">
+    <h3>🔒 Account Security</h3>
+    <div class="setting-row">
+      <div class="label">Password</div>
+      <button class="btn-secondary" onclick="openPasswordModal()">Change Password</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🛡️ Privacy & Legal</h3>
+    <div class="setting-row">
+      <div class="label">Terms & Conditions</div>
+      <button class="btn-secondary" onclick="showTerms()">View Terms</button>
+    </div>
+    <div class="setting-row">
+      <div class="label">Privacy Policy</div>
+      <button class="btn-secondary" onclick="showPrivacy()">View Policy</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚠️ Danger Zone</h3>
+    <div class="setting-row">
+      <div>
+        <div class="label">Logout</div>
+        <div style="font-size:12px;color:#888;margin-top:4px;">Sign out of your account</div>
+      </div>
+      <button class="btn-secondary" onclick="logout()">Logout</button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="label">Delete Account</div>
+        <div style="font-size:12px;color:#888;margin-top:4px;">Permanently delete your account and all data</div>
+      </div>
+      <button class="btn-danger" onclick="deleteAccount()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal" id="termsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Terms & Conditions</h3>
+      <button class="close-btn" onclick="closeTerms()">&times;</button>
+    </div>
+    <p><strong>Last updated:</strong> February 2026</p>
+    <h4>1. Acceptance of Terms</h4>
+    <p>By accessing and using LangTutor, you accept and agree to be bound by these Terms and Conditions.</p>
+    <h4>2. User Accounts</h4>
+    <p>You are responsible for maintaining the confidentiality of your account credentials.</p>
+    <h4>3. Use of Service</h4>
+    <p>LangTutor provides language learning tools and resources.</p>
+    <h4>4. Content and Intellectual Property</h4>
+    <p>All learning materials, content, and features are owned by LangTutor.</p>
+    <h4>5. Privacy</h4>
+    <p>Your use of LangTutor is also governed by our Privacy Policy.</p>
+    <h4>6. Modifications</h4>
+    <p>We reserve the right to modify these terms at any time.</p>
+    <h4>7. Termination</h4>
+    <p>We may terminate or suspend your account at any time for violation of these terms.</p>
+    <h4>8. Limitation of Liability</h4>
+    <p>LangTutor is provided "as is" without warranties.</p>
+  </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal" id="privacyModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Privacy Policy</h3>
+      <button class="close-btn" onclick="closePrivacy()">&times;</button>
+    </div>
+    <p><strong>Last updated:</strong> February 2026</p>
+    <h4>1. Information We Collect</h4>
+    <p>We collect information you provide when creating an account (username, email).</p>
+    <h4>2. How We Use Your Information</h4>
+    <p>We use your data to provide personalized learning experiences.</p>
+    <h4>3. Data Storage</h4>
+    <p>Your data is stored securely in our database.</p>
+    <h4>4. Data Sharing</h4>
+    <p>We do not sell your personal information.</p>
+    <h4>5. Cookies and Local Storage</h4>
+    <p>We use cookies for authentication and local storage for preferences.</p>
+    <h4>6. Your Rights</h4>
+    <p>You have the right to access, update, or delete your personal data.</p>
+    <h4>7. Children's Privacy</h4>
+    <p>Our service is not intended for children under 13.</p>
+    <h4>8. Changes to Privacy Policy</h4>
+    <p>We may update this policy from time to time.</p>
+  </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal" id="passwordModal">
+  <div class="modal-content" style="max-width:520px;">
+    <div class="modal-header">
+      <h3>Change Password</h3>
+      <button class="close-btn" onclick="closePasswordModal()">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label for="currentPassword">Current Password</label>
+      <input id="currentPassword" type="password" placeholder="Enter current password">
+    </div>
+
+    <div class="form-group">
+      <label for="newPassword">New Password</label>
+      <input id="newPassword" type="password" placeholder="Enter new password (min 8 chars)">
+    </div>
+
+    <div class="form-group">
+      <label for="confirmPassword">Confirm New Password</label>
+      <input id="confirmPassword" type="password" placeholder="Re-enter new password">
+    </div>
+
+    <div class="success-msg" id="pwSuccess">✅ Password updated!</div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" type="button" onclick="closePasswordModal()">Cancel</button>
+      <button class="btn-primary" type="button" onclick="submitPasswordChange()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Avatar Picker Modal -->
+<div id="avatarModal" class="avatar-modal" aria-hidden="true">
+  <div class="avatar-modal-card">
+    <div class="avatar-modal-header">
+      <h3>Choose Your Avatar</h3>
+      <button class="avatar-close" onclick="closeAvatarPicker()" aria-label="Close">&times;</button>
+    </div>
+
+    <div id="avatarGrid" class="avatar-grid"></div>
+
+    <button class="avatar-save" onclick="saveAvatar()">Save</button>
+  </div>
+</div>
+
+<script>
+/* =========================
+   INITIAL LOAD
+========================= */
+(async function() {
+  try {
+    const authRes = await fetch('/auth/check');
+    const authData = await authRes.json();
+
+    if (!authData.authenticated) {
+      window.location.href = '/';
+      return;
+    }
+
+    const username = authData.username;
+    document.getElementById('profileUsername').textContent = username;
+    document.getElementById('displayUsername').textContent = username;
+
+    if (authData.email) {
+      document.getElementById('displayEmail').textContent = authData.email;
+      document.getElementById('emailInput').value = authData.email;
+    }
+
+    // Load avatar from backend
+    if (authData.avatar) {
+      localStorage.setItem('userAvatar', authData.avatar);
+      selectedAvatar = authData.avatar;
+    }
+
+    // default initial (if no emoji yet)
+    document.getElementById('profileAvatar').textContent = username.charAt(0).toUpperCase();
+
+    updateAvatarDisplay();
+
+    if (authData.created_at) {
+      const createdDate = new Date(authData.created_at);
+      const monthYear = createdDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      document.getElementById('memberSince').textContent = monthYear;
+    } else {
+      document.getElementById('memberSince').textContent = 'Recently';
+    }
+
+    const difficulty = localStorage.getItem('difficulty') || 'beginner';
+    document.querySelectorAll('.difficulty-card').forEach(card => {
+      if (card.dataset.level === difficulty) card.classList.add('active');
+    });
+
+    const goal = localStorage.getItem('dailyGoalMinutes') || '10';
+    document.querySelectorAll('.goal-card').forEach(card => {
+      if (card.dataset.goal === goal) card.classList.add('active');
+    });
+
+  } catch (err) {
+    console.error('Failed to load profile:', err);
+  }
+})();
+
+/* =========================
+   PREFERENCES
+========================= */
+function selectDifficulty(level) {
+  document.querySelectorAll('.difficulty-card').forEach(card => card.classList.remove('active'));
+  document.querySelector(`.difficulty-card[data-level="${level}"]`).classList.add('active');
+  localStorage.setItem('difficulty', level);
+  showSuccess('prefSuccess');
+}
+
+function selectGoal(minutes) {
+  document.querySelectorAll('.goal-card').forEach(card => card.classList.remove('active'));
+  document.querySelector(`.goal-card[data-goal="${minutes}"]`).classList.add('active');
+  localStorage.setItem('dailyGoalMinutes', minutes);
+  showSuccess('prefSuccess');
+}
+
+/* =========================
+   SUCCESS / ERROR HELPERS
+========================= */
+function showSuccess(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (msg) el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* =========================
+   EMAIL VALIDATION ✅
+========================= */
+function isValidEmail(email) {
+  // Basic format check (supports .co.uk, subdomains, etc.)
+  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return re.test(email);
+}
+
+// AI-powered domain check
+async function checkEmailDomain(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return { valid: false, error: 'Invalid email format' };
+
+  try {
+    const res = await fetch('/api/validate-email-domain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.is_typo && data.suggestion) {
+      return { valid: false, error: `Did you mean ${data.suggestion}? Please correct the spelling.` };
+    }
+    return { valid: true };
+  } catch {
+    return { valid: true }; // fail open on network error
+  }
+}
+
+async function updateEmail() {
+  const emailInput = document.getElementById('emailInput');
+  const email = emailInput.value.trim().toLowerCase(); // normalize to lowercase
+
+  // clear old messages
+  document.getElementById('emailSuccess').classList.remove('show');
+  document.getElementById('emailError').classList.remove('show');
+
+  if (!email) {
+    showError('emailError', '❌ Please enter an email address.');
+    emailInput.focus();
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    showError('emailError', '❌ Please enter a valid email (e.g. name@gmail.com).');
+    emailInput.focus();
+    return;
+  }
+
+  // Check domain validity and typos
+  const domainCheck = await checkEmailDomain(email);
+  if (!domainCheck.valid) {
+    showError('emailError', '❌ ' + domainCheck.error);
+    emailInput.focus();
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/update-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showError('emailError', '❌ ' + (data.detail || 'Email update failed.'));
+      return;
+    }
+
+    // Sync the display row with the new email
+    document.getElementById('displayEmail').textContent = email;
+    showSuccess('emailSuccess');
+  } catch (err) {
+    console.error('Email update error:', err);
+    showError('emailError', '❌ Server error. Please try again.');
+  }
+}
+
+// Real-time format check only (domain check runs on Save via AI)
+document.getElementById('emailInput').addEventListener('input', (e) => {
+  const email = e.target.value.trim().toLowerCase();
+  const errorEl = document.getElementById('emailError');
+
+  if (!email || isValidEmail(email)) {
+    errorEl.classList.remove('show');
+  }
+});
+
+/* =========================
+   TERMS / PRIVACY
+========================= */
+function showTerms() { document.getElementById('termsModal').classList.add('open'); document.body.classList.add('modal-open'); }
+function closeTerms() { document.getElementById('termsModal').classList.remove('open'); document.body.classList.remove('modal-open'); }
+function showPrivacy() { document.getElementById('privacyModal').classList.add('open'); document.body.classList.add('modal-open'); }
+function closePrivacy() { document.getElementById('privacyModal').classList.remove('open'); document.body.classList.remove('modal-open'); }
+
+/* =========================
+   LOGOUT / DELETE
+========================= */
+async function logout() {
+  try {
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  } catch (err) {
+    console.error('Logout failed:', err);
+  }
+}
+
+async function deleteAccount() {
+  const confirm1 = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+  if (!confirm1) return;
+  const confirm2 = confirm('All your progress, chat history, and data will be permanently deleted. Continue?');
+  if (!confirm2) return;
+  alert('Account deletion coming soon! For now, please contact support.');
+}
+
+/* =========================
+   PASSWORD MODAL
+========================= */
+function openPasswordModal() {
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.getElementById('pwSuccess').classList.remove('show');
+
+  document.getElementById('passwordModal').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closePasswordModal() {
+  document.getElementById('passwordModal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+async function submitPasswordChange() {
+  const current_password = document.getElementById('currentPassword').value.trim();
+  const new_password = document.getElementById('newPassword').value.trim();
+  const confirm_password = document.getElementById('confirmPassword').value.trim();
+
+  if (!current_password || !new_password || !confirm_password) {
+    alert('Please fill in all password fields.');
+    return;
+  }
+  if (new_password.length < 8) {
+    alert('New password must be at least 8 characters.');
+    return;
+  }
+  if (new_password !== confirm_password) {
+    alert("New password and confirmation don't match.");
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ current_password, new_password })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || 'Password change failed.');
+      return;
+    }
+
+    showSuccess('pwSuccess');
+    setTimeout(() => closePasswordModal(), 900);
+
+  } catch (err) {
+    console.error('Password change error:', err);
+    alert('Server error. Please try again.');
+  }
+}
+
+/* =========================
+   AVATAR SYSTEM ✅
+========================= */
+const AVATARS = ['🐱','🐶','🐼','🐨','🦊','🦁','🐯','🐮','🐷','🐸','🎮','🎨','🎭','🎪','🎯','🎲','⚽','🎸','🎺','🎻','🌸','🌺','🌻','🌹','🌷','🌱','🌲','🌳','🍀','🌾','🌟','⭐','🌙','☀️','🪐','🚀','🛸','⚡','💫','✨','🍕','🍔','🍟','🌮','🍜','🍱','🍣','🍰','🍩','🍪'];
+
+let selectedAvatar = localStorage.getItem('userAvatar') || '';
+
+function openAvatarPicker() {
+  const grid = document.getElementById('avatarGrid');
+  grid.innerHTML = '';
+
+  AVATARS.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = emoji;
+
+    if (emoji === selectedAvatar) btn.style.borderColor = '#667eea';
+
+    btn.onclick = () => {
+      grid.querySelectorAll('button').forEach(b => b.style.borderColor = 'transparent');
+      btn.style.borderColor = '#667eea';
+      selectedAvatar = emoji;
+    };
+
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('avatarModal').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+
+function closeAvatarPicker() {
+  document.getElementById('avatarModal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+async function saveAvatar() {
+  if (!selectedAvatar) return;
+
+  try {
+    // Save to backend
+    const res = await fetch('/api/update-avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar: selectedAvatar })
+    });
+
+    if (!res.ok) {
+      alert('Failed to save avatar. Please try again.');
+      return;
+    }
+
+    // Save to localStorage for immediate UI update
+    localStorage.setItem('userAvatar', selectedAvatar);
+    updateAvatarDisplay();
+
+    // Update sidebar avatar if on main app
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+    if (sidebarAvatar) {
+      sidebarAvatar.textContent = selectedAvatar;
+    }
+
+    closeAvatarPicker();
+  } catch (err) {
+    console.error('Avatar save error:', err);
+    alert('Network error. Please try again.');
+  }
+}
+
+function updateAvatarDisplay() {
+  const avatar = localStorage.getItem('userAvatar');
+  const profileAvatar = document.getElementById('profileAvatar');
+  const headerAvatar = document.getElementById('headerAvatar');
+
+  if (avatar) {
+    profileAvatar.textContent = avatar;
+    profileAvatar.style.background = 'white';
+    profileAvatar.style.color = '#333';
+    if (headerAvatar) headerAvatar.textContent = avatar;
+  } else {
+    const username = document.getElementById('profileUsername').textContent || 'U';
+    const initial = username.charAt(0).toUpperCase();
+    profileAvatar.textContent = initial;
+    profileAvatar.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+    profileAvatar.style.color = 'white';
+    if (headerAvatar) headerAvatar.textContent = '👤';
+  }
+}
+
+/* Close avatar modal by clicking outside card */
+document.getElementById('avatarModal').addEventListener('click', (e) => {
+  if (e.target.id === 'avatarModal') closeAvatarPicker();
+});
+
+/* ESC closes any open modal */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAvatarPicker();
+    closeTerms();
+    closePrivacy();
+    closePasswordModal();
+  }
+});
+</script>
+
+</body>
+</html>

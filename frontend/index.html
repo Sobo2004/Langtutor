@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LangTutor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Auth Pages Styles */
+    .auth-wrapper {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-wrapper.active {
+      display: flex;
+    }
+
+    .auth-container {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-container h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .auth-container .subtitle-auth {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .auth-btn:active {
+      transform: translateY(0);
+    }
+
+    .switch-auth {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .switch-auth a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .switch-auth a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: none;
+      font-size: 14px;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* App wrapper */
+    .app {
+      display: none;
+    }
+
+    .app.active {
+      display: flex;
+    }
+
+    /* Add logout button to sidebar */
+    .logout-section {
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div class="auth-wrapper active" id="loginPage">
+  <div class="auth-container">
+    <h1>📚 LangTutor</h1>
+    <p class="subtitle-auth">Login to your account</p>
+    <div class="error-message" id="loginError"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label data-i18n="username">Username</label>
+        <input type="text" id="loginUsername" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label data-i18n="password">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password">
+      </div>
+      <div style="text-align:right;margin-bottom:16px;">
+        <a href="#" onclick="showForgotPassword(); return false;" style="color:#667eea;font-size:13px;text-decoration:none;font-weight:500;">Forgot password?</a>
+      </div>
+      <button type="submit" class="auth-btn" data-i18n="login">Login</button>
+    </form>
+    <div class="switch-auth">
+      Don't have an account? <a href="#" id="showSignup">Sign up</a>
+    </div>
+    <a href="/admin" style="display:block;text-align:center;margin-top:18px;color:rgba(255,255,255,0.4);font-size:12px;text-decoration:none;">Admin sign in</a>
+  </div>
+</div>
+<div class="auth-wrapper" id="signupPage">
+  <div class="auth-container">
+    <h1>📚 LangTutor</h1>
+    <p class="subtitle-auth">Create your account</p>
+    <div class="error-message" id="signupError"></div>
+    <form id="signupForm">
+      <div class="form-group">
+        <label data-i18n="username">Username</label>
+        <input type="text" id="signupUsername" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label data-i18n="email">Email</label>
+        <input type="email" id="signupEmail" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label data-i18n="password">Password</label>
+        <input type="password" id="signupPassword" required autocomplete="new-password">
+      </div>
+      <button type="submit" class="auth-btn" data-i18n="signup">Sign Up</button>
+    </form>
+    <div class="switch-auth">
+      Already have an account? <a href="#" id="showLogin" data-i18n="login">Login</a>
+    </div>
+  </div>
+</div>
+
+<!-- Signup Success Modal -->
+<div class="modal" id="signupSuccessModal">
+  <div class="modal-content" style="text-align:center;max-width:380px;padding:40px;">
+    <div style="font-size:64px;margin-bottom:16px;">✅</div>
+    <h3 style="margin-bottom:12px;">Account Created!</h3>
+    <p class="modal-subtitle" style="margin-bottom:24px;font-size:14px;">Your account has been successfully created. You can now log in!</p>
+    <button class="auth-btn" id="btnGoToLoginFromSignup">Go to Login</button>
+  </div>
+</div>
+
+<!-- Login Success Toast -->
+<div id="loginSuccessToast" style="display:none;position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;font-weight:600;animation:slideInRight 0.3s ease;">
+  ✅ Login successful!
+</div>
+
+<!-- Main App -->
+<div class="app" id="mainApp">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-content">
+      <h1>📚 LangTutor</h1>
+      <div class="language-toggle" onclick="toggleLanguage()">
+        <span id="langFrom">English</span>
+        <span style="margin:0 6px;">→</span>
+        <span id="langTo">Russian</span>
+        <span style="margin-left:8px;font-size:12px;opacity:0.7;">🔄</span>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-top">
+          <span>Level <span id="userLevel">1</span></span>
+          <span><span id="currentXP">0</span>/100 XP</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div>🔥 <span id="streakDays">0</span><br/ data-i18n="streak">Day Streak</div>
+        <div>⭐ <span id="totalXP">0</span><br/ data-i18n="xp">Total XP</div>
+        <div>🎯 <span id="proficiencyLevel">A1</span><br/ data-i18n="proficiency_level">Level</div>
+        <div>📚 <span id="completedCount">0</span><br/ data-i18n="completed">Words</div>
+      </div>
+
+      <h3 data-i18n="quick_start">Quick Start</h3>
+      <button onclick="startLesson('a1_greetings')">📘 Greetings</button>
+      <button onclick="startLesson('a1_travel')">🧳 Travel</button>
+      <button onclick="startLesson('a2_food')">🍽 Food</button>
+      <button id="stopLessonBtn" class="danger hidden" onclick="stopLesson()">⛔ Stop Lesson</button>
+
+      <h3 style="margin-top:18px;">Explore</h3>
+      <a href="/progress"   style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📈 My Progress</a>
+      <a href="/leaderboard" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">🏆 Leaderboard</a>
+      <a href="/quiz" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📝 Quiz</a>
+
+    </div>
+
+    <div class="logout-section">
+      <p style="color: white; font-size: 14px; margin-bottom: 10px; text-align: center;">
+        <span id="sidebarAvatar" style="font-size:20px;margin-right:4px;">👤</span>
+        Logged in as <a href="/profile" style="color:#fff;font-weight:600;text-decoration:none;border-bottom:1px dashed rgba(255,255,255,0.5);" id="usernameDisplay">User</a>
+      </p>
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Logout</button>
+    </div>
+  </aside>
+
+  <!-- CHAT -->
+  <main class="chat">
+
+    <header>
+      <h2 id="chatTitle">💬 Chat with your tutor</h2>
+      <span class="badge">Learning: 🇷🇺 Russian</span>
+    </header>
+
+    <div id="messages" class="messages"></div>
+
+    <!-- QUIZ (HIDDEN BY DEFAULT) -->
+    <div id="quiz" class="quiz hidden">
+      <h3>🧠 Quick Quiz</h3>
+      <p id="quizQuestion"></p>
+      <input id="quizInput" placeholder="Type your answer…" />
+      <div class="quiz-actions">
+        <button onclick="skipQuiz()">Skip</button>
+        <button onclick="submitQuiz()">Submit</button>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <footer>
+      <input id="messageInput" placeholder="Type your message or click 🎤 to speak…" />
+      <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+      <button id="listenBtn" onclick="speakLastMessage()" title="Listen to last message">🔊</button>
+      <button onclick="sendMessage()">Send</button>
+    </footer>
+
+  </main>
+
+</div>
+
+<!-- Welcome-back popup (Duolingo style) -->
+<div class="popup-overlay" id="welcomePopup">
+  <div class="popup-card" id="popupCard">
+
+    <!-- Screen 1: Welcome greeting -->
+    <div class="popup-screen active" id="screenWelcome">
+      <div class="popup-icon">👋</div>
+      <h2 id="popupGreeting">Welcome back!</h2>
+      <p id="popupStreak" class="popup-sub"></p>
+      <div id="popupReviewRow" class="popup-review-row"></div>
+      <button class="popup-btn" id="btnStartQuiz">Let's do a quick recap!</button>
+    </div>
+
+    <!-- Screen 2: Quiz question -->
+    <div class="popup-screen" id="screenQuiz">
+      <div class="popup-icon">🧠</div>
+      <p class="popup-sub" style="margin-bottom:4px;">Quick recap</p>
+      <h2 id="quizPrompt"></h2>
+      <p class="popup-sub" id="quizHint" style="color:#888;margin-bottom:16px;"></p>
+      <div class="popup-options" id="quizOptions"></div>
+      <div id="quizFeedback" class="popup-feedback" style="display:none;"></div>
+    </div>
+
+    <!-- Screen 3: All done -->
+    <div class="popup-screen" id="screenDone">
+      <div class="popup-icon">🎉</div>
+      <h2>You're all set!</h2>
+      <p class="popup-sub">Great memory! Let's keep learning.</p>
+      <button class="popup-btn" id="btnContinue">Continue learning</button>
+    </div>
+
+    <!-- Screen 4: Brand new user onboarding (replaces old screenNew) -->
+    <!-- Step 1: Why are you learning Russian? -->
+    <div class="popup-screen" id="screenOnboard1">
+      <div class="onboard-progress"><div class="onboard-progress-fill" style="width:25%"></div></div>
+      <div class="onboard-mascot">
+        <div class="mascot-bubble">Why are you learning Russian?</div>
+        <div class="mascot">🦉</div>
+      </div>
+      <div class="onboard-options" id="onboardWhyOptions">
+        <button class="onboard-opt" data-val="career">💼 Boost my career</button>
+        <button class="onboard-opt" data-val="people">🤝 Connect with people</button>
+        <button class="onboard-opt" data-val="fun">🎉 Just for fun</button>
+        <button class="onboard-opt" data-val="productive">🧠 Spend time productively</button>
+        <button class="onboard-opt" data-val="travel">✈️ Prepare for travel</button>
+        <button class="onboard-opt" data-val="education">📖 Support my education</button>
+      </div>
+      <button class="onboard-continue" id="btnOnboard1Next" disabled>CONTINUE</button>
+    </div>
+
+    <!-- Step 2: What's your daily learning goal? -->
+    <div class="popup-screen" id="screenOnboard2">
+      <div class="onboard-progress"><div class="onboard-progress-fill" style="width:50%"></div></div>
+      <div class="onboard-mascot">
+        <div class="mascot-bubble">What's your daily learning goal?</div>
+        <div class="mascot">🦉</div>
+      </div>
+      <div class="onboard-options" id="onboardGoalOptions">
+        <button class="onboard-opt onboard-goal-opt" data-val="5">
+          <span class="goal-left"><strong>5 min / day</strong></span>
+          <span class="goal-right">Casual</span>
+        </button>
+        <button class="onboard-opt onboard-goal-opt" data-val="10">
+          <span class="goal-left"><strong>10 min / day</strong></span>
+          <span class="goal-right">Regular</span>
+        </button>
+        <button class="onboard-opt onboard-goal-opt" data-val="15">
+          <span class="goal-left"><strong>15 min / day</strong></span>
+          <span class="goal-right">Serious</span>
+        </button>
+      </div>
+      <button class="onboard-continue" id="btnOnboard2Next" disabled>CONTINUE</button>
+    </div>
+
+    <!-- Step 3: Listen & pick quiz -->
+    <div class="popup-screen" id="screenOnboard3">
+      <div class="onboard-progress"><div class="onboard-progress-fill" style="width:75%"></div></div>
+      <h2 style="margin:16px 0 4px;color:#222;">What do you hear?</h2>
+      <p class="popup-sub" style="margin-bottom:20px;">Listen and pick the correct pronunciation</p>
+      <div class="listen-row">
+        <button class="listen-play-btn" id="btnPlay">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="white"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        </button>
+        <div class="listen-options" id="listenOptions"></div>
+      </div>
+      <div id="listenFeedback" class="popup-feedback" style="display:none;margin-top:12px;"></div>
+    </div>
+
+    <!-- Step 4: Onboarding complete -->
+    <div class="popup-screen" id="screenOnboard4">
+      <div class="onboard-progress"><div class="onboard-progress-fill" style="width:100%"></div></div>
+      <div class="popup-icon" style="margin-top:24px;">🎉</div>
+      <h2>You're all set!</h2>
+      <p class="popup-sub">Let's start your Russian learning journey.<br>One word at a time!</p>
+      <button class="popup-btn" id="btnOnboardFinish">Start learning</button>
+    </div>
+
+    <!-- Screen 5: Feedback question -->
+    <div class="popup-screen" id="screenFeedback">
+      <div class="popup-icon">💬</div>
+      <h2>How's it going?</h2>
+      <p class="popup-sub">Are you enjoying learning Russian with LangTutor?</p>
+      <div class="popup-feedback-btns">
+        <button class="popup-fb-btn fb-love" id="btnLove">😍 Love it!</button>
+        <button class="popup-fb-btn fb-good" id="btnGood">👍 It's good</button>
+        <button class="popup-fb-btn fb-meh" id="btnMeh">😐 It's okay</button>
+      </div>
+    </div>
+
+    <!-- Screen 6: Thanks for feedback -->
+    <div class="popup-screen" id="screenThanks">
+      <div class="popup-icon" id="thankIcon">😊</div>
+      <h2>Thanks for telling us!</h2>
+      <p class="popup-sub" id="thankMsg">We'll keep improving for you.</p>
+      <button class="popup-btn" id="btnFinish">Start learning</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Time's Up Popup -->
+<div class="popup-overlay" id="timeUpPopup">
+  <div class="popup-card" style="text-align:center;max-width:400px;">
+    <div style="font-size:64px;margin-bottom:12px;">⏰</div>
+    <h2 style="font-size:26px;margin-bottom:8px;">Time's up for today!</h2>
+    <p class="popup-sub" style="margin-bottom:20px;">
+      You've reached your daily goal of <strong id="goalMinutesDisplay">10</strong> minutes. Great work! 🎉
+    </p>
+    <p class="popup-sub" style="color:#888;font-size:13px;margin-bottom:20px;">
+      Taking breaks helps you learn better. Come back tomorrow to continue!
+    </p>
+    <button class="popup-btn" id="btnTimeUpContinue" style="margin-bottom:10px;">Keep learning anyway</button>
+    <button class="popup-btn" id="btnTimeUpDone" style="background:rgba(102,126,234,0.15);color:#667eea;">I'm done for today</button>
+  </div>
+</div>
+
+<!-- OTP Verification Modal -->
+<div class="modal" id="otpModal">
+  <div class="modal-content" style="max-width:450px;">
+    <h3 style="margin:0 0 8px;font-size:24px;">✉️ Verify Your Email</h3>
+    <p style="color:#666;font-size:14px;margin-bottom:24px;">Enter the 6-digit code sent to <strong id="otpEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7c0513090e3c19111d1510521f1311">[email&#160;protected]</a></strong></p>
+    <div class="otp-input-group">
+      <input type="text" maxlength="1" class="otp-box" id="otp1" />
+      <input type="text" maxlength="1" class="otp-box" id="otp2" />
+      <input type="text" maxlength="1" class="otp-box" id="otp3" />
+      <input type="text" maxlength="1" class="otp-box" id="otp4" />
+      <input type="text" maxlength="1" class="otp-box" id="otp5" />
+      <input type="text" maxlength="1" class="otp-box" id="otp6" />
+    </div>
+    <div class="error-message" id="otpError"></div>
+    <button class="auth-btn" id="btnVerifyOTP">Verify</button>
+    <button class="resend-btn" id="btnResendOTP" disabled>Resend Code (<span id="resendTimer">30</span>s)</button>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal" id="forgotPasswordModal">
+  <div class="modal-content" style="max-width:450px;">
+    <button class="modal-close" id="closeForgotPassword">&times;</button>
+    <div class="forgot-step active" id="forgotStep1">
+      <h3 style="margin:0 0 8px;font-size:24px;">🔒 Reset Password</h3>
+      <p style="color:#666;font-size:14px;margin-bottom:24px;">Enter your email and we'll send you a code</p>
+      <div class="form-group">
+        <label data-i18n="email">Email</label>
+        <input type="email" id="forgotEmail" placeholder="your@email.com" />
+      </div>
+      <div class="error-message" id="forgotError1"></div>
+      <button class="auth-btn" id="btnSendResetCode">Send Code</button>
+    </div>
+    <div class="forgot-step" id="forgotStep2">
+      <h3 style="margin:0 0 8px;font-size:24px;">🔑 Reset Password</h3>
+      <p style="color:#666;font-size:14px;margin-bottom:8px;">Code sent to <strong id="forgotEmailDisplay"></strong></p>
+      <div id="devCodeNotice" style="display:none;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:12px;"></div>
+      <div class="form-group">
+        <label>Verification Code</label>
+        <div class="otp-input-group">
+          <input type="text" maxlength="1" class="otp-box" id="reset1" />
+          <input type="text" maxlength="1" class="otp-box" id="reset2" />
+          <input type="text" maxlength="1" class="otp-box" id="reset3" />
+          <input type="text" maxlength="1" class="otp-box" id="reset4" />
+          <input type="text" maxlength="1" class="otp-box" id="reset5" />
+          <input type="text" maxlength="1" class="otp-box" id="reset6" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="resetNewPassword" />
+        <div class="password-strength" id="resetPasswordStrength"></div>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="resetConfirmPassword" />
+      </div>
+      <div class="error-message" id="forgotError2"></div>
+      <button class="auth-btn" id="btnResetPassword">Reset Password</button>
+      <button class="resend-btn" id="btnResendReset" disabled>Resend (<span id="resetTimer">30</span>s)</button>
+    </div>
+    <div class="forgot-step" id="forgotStep3">
+      <div style="font-size:64px;margin-bottom:16px;text-align:center;">✅</div>
+      <h3 style="margin:0 0 8px;font-size:24px;text-align:center;">Password Reset!</h3>
+      <p style="color:#666;font-size:14px;margin-bottom:24px;text-align:center;">You can now log in with your new password.</p>
+      <button class="auth-btn" id="btnBackToLogin">Go to Login</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; }
+.modal.active { display:flex; }
+.modal-content { background:#fff; border-radius:16px; padding:32px; width:90%; position:relative; }
+.modal-close { position:absolute; top:16px; right:16px; background:none; border:none; font-size:28px; color:#999; cursor:pointer; }
+.modal-close:hover { color:#333; }
+.otp-input-group { display:flex; gap:8px; justify-content:center; margin:20px 0; }
+.otp-box { width:48px; height:56px; text-align:center; font-size:24px; font-weight:600; border:2px solid #ddd; border-radius:8px; transition:all 0.2s; }
+.otp-box:focus { outline:none; border-color:#667eea; background:#f8f9ff; }
+.otp-box.error { border-color:#dc3545; animation:shake 0.3s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+.password-strength { margin-top:8px; height:4px; background:#e0e0e0; border-radius:2px; overflow:hidden; display:none; }
+.password-strength.active { display:block; }
+.password-strength::after { content:''; display:block; height:100%; transition:all 0.3s; }
+.password-strength.weak::after { width:33%; background:#dc3545; }
+.password-strength.medium::after { width:66%; background:#ffc107; }
+.password-strength.strong::after { width:100%; background:#28a745; }
+.resend-btn { background:none; border:none; color:#667eea; font-size:14px; cursor:pointer; margin-top:12px; padding:8px; }
+.resend-btn:disabled { color:#999; cursor:not-allowed; }
+.resend-btn:not(:disabled):hover { text-decoration:underline; }
+.forgot-step { display:none; }
+.forgot-step.active { display:block; }
+</style>
+
+<script src="/static/auth-functions.js"></script>
+<script src="/static/translations.js?v=2"></script>
+<script src="/static/app.js?v=2"></script>
+<script src="/static/welcome.js?v=2"></script>
+<script>
+  // Auth functionality
+  const loginPage = document.getElementById('loginPage');
+  const signupPage = document.getElementById('signupPage');
+  const mainApp = document.getElementById('mainApp');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const showSignupLink = document.getElementById('showSignup');
+  const showLoginLink = document.getElementById('showLogin');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  
+
+ async function checkAuth() {
+  const response = await fetch('/auth/check');
+  const data = await response.json();
+
+  if (data.authenticated) {
+    showMainApp(data);
+    // ✅ Trigger onboarding/recap flow right after login
+setTimeout(() => {
+  if (window.startPostLoginFlow) window.startPostLoginFlow();
+}, 0);
+
+
+    // ✅ trigger onboarding/recap immediately
+    try {
+      if (window.startPostLoginFlow) {
+        window.startPostLoginFlow();
+      }
+    } catch (e) {
+      console.error("Post-login flow failed:", e);
+    }
+
+    // Disabled old welcome popup - using new recap modal system
+    // setTimeout(() => initWelcomePopup(), 300);
+  } else {
+    showLoginPage();
+  }
+}
+
+
+
+  function showLoginPage() {
+    loginPage.classList.add('active');
+    // Force UI labels to English on login screen
+    try {
+        localStorage.setItem('uiLanguage', 'en');
+        if (typeof updateUILanguage === 'function') updateUILanguage();
+    } catch (e) {}
+
+    signupPage.classList.remove('active');
+    mainApp.classList.remove('active');
+  }
+
+  function showSignupPage() {
+    signupPage.classList.add('active');
+    loginPage.classList.remove('active');
+    mainApp.classList.remove('active');
+  }
+
+  function showSignupSuccess() {
+    document.getElementById('signupSuccessModal').classList.add('active');
+  }
+
+  function showMainApp(userData) {
+    mainApp.classList.add('active');
+    loginPage.classList.remove('active');
+    signupPage.classList.remove('active');
+    document.getElementById('usernameDisplay').textContent = userData.username;
+
+    // Fix XP display - show XP within current level (0-100)
+    const xpInLevel = userData.xp % 100;
+    const levelNumber = Math.floor(userData.xp / 100) + 1;
+
+    document.getElementById('currentXP').textContent = xpInLevel;
+    document.getElementById('totalXP').textContent = userData.xp;
+    document.getElementById('proficiencyLevel').textContent = userData.level;
+    document.getElementById('streakDays').textContent = userData.streak;
+    document.getElementById('progressFill').style.width = xpInLevel + '%';
+
+    // Update level display
+    const levelEl = document.getElementById('userLevel');
+    if (levelEl) levelEl.textContent = levelNumber;
+    
+    // Update sidebar avatar - sync from backend
+    const avatarEl = document.getElementById('sidebarAvatar');
+    if (userData.avatar) {
+      // Sync avatar from backend to localStorage
+      localStorage.setItem('userAvatar', userData.avatar);
+      avatarEl.textContent = userData.avatar;
+    } else {
+      // No avatar set, check localStorage or use initial
+      const savedAvatar = localStorage.getItem('userAvatar');
+      if (savedAvatar) {
+        avatarEl.textContent = savedAvatar;
+      } else {
+        avatarEl.textContent = userData.username.charAt(0).toUpperCase();
+      }
+    }
+  }
+
+  showSignupLink.addEventListener('click', (e) => { e.preventDefault(); showSignupPage(); });
+  showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
+
+  // Signup success modal button
+  document.getElementById('btnGoToLoginFromSignup').addEventListener('click', () => {
+    document.getElementById('signupSuccessModal').classList.remove('active');
+    showLoginPage();
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    errorDiv.classList.remove('show');
+    
+    // Validate username format
+    if (username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+      errorDiv.textContent = 'Invalid username format';
+      errorDiv.classList.add('show');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      
+      // Check if email verification is required
+      if (data.require_verification && data.email) {
+        currentSignupEmail = data.email;
+        currentOTPPurpose = 'email_verification';
+        showOTPModal(data.email);
+        errorDiv.textContent = '';
+        return;
+      }
+      
+      if (response.ok && data.success) {
+        // Show success toast
+        const toast = document.getElementById('loginSuccessToast');
+        toast.style.display = 'block';
+
+        // Wait briefly to show toast before loading main app
+        setTimeout(() => {
+          checkAuth();
+        }, 800);
+
+        // Hide toast after 2 seconds
+        setTimeout(() => {
+          toast.style.animation = 'fadeOut 0.3s ease';
+          setTimeout(() => { toast.style.display = 'none'; }, 300);
+        }, 2000);
+      } else {
+        errorDiv.textContent = data.detail || 'Login failed';
+        errorDiv.classList.add('show');
+      }
+    } catch (error) { 
+      errorDiv.textContent = 'Network error.'; 
+      errorDiv.classList.add('show'); 
+    }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('signupUsername').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const email = document.getElementById('signupEmail').value.trim();
+    const errorDiv = document.getElementById('signupError');
+    errorDiv.classList.remove('show');
+    
+    // Validate username
+    if (username.length < 3 || username.length > 20) {
+      errorDiv.textContent = 'Username must be 3-20 characters';
+      errorDiv.classList.add('show');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      errorDiv.textContent = 'Username can only contain letters, numbers, and underscores';
+      errorDiv.classList.add('show');
+      return;
+    }
+    
+    // Validate password
+    if (password.length < 8) {
+      errorDiv.textContent = 'Password must be at least 8 characters';
+      errorDiv.classList.add('show');
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      errorDiv.textContent = 'Password must contain at least one uppercase letter';
+      errorDiv.classList.add('show');
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      errorDiv.textContent = 'Password must contain at least one lowercase letter';
+      errorDiv.classList.add('show');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      errorDiv.textContent = 'Password must contain at least one number';
+      errorDiv.classList.add('show');
+      return;
+    }
+    
+    // Validate email format
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      errorDiv.textContent = 'Please enter a valid email (e.g. name@gmail.com)';
+      errorDiv.classList.add('show');
+      return;
+    }
+
+    // Show loading state while checking email domain
+    const submitBtn = signupForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking email…';
+
+    // Domain check
+    const domainCheck = await checkEmailDomain(email);
+
+    if (!domainCheck.valid) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      errorDiv.textContent = domainCheck.error;
+      errorDiv.classList.add('show');
+      return;
+    }
+
+    submitBtn.textContent = 'Signing up…';
+
+    try {
+      const response = await fetch('/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, email })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        showSignupSuccess();
+      } else {
+        errorDiv.textContent = data.detail || 'Signup failed';
+        errorDiv.classList.add('show');
+      }
+    } catch (error) {
+      errorDiv.textContent = 'Network error.';
+      errorDiv.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await fetch('/auth/logout', { method: 'POST' });
+      showLoginPage();      
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  });
+
+  checkAuth();
+  
+</script>
+
+<!-- ONBOARDING MODAL - Multi-Step Flow -->
+<div id="onboardingModal" class="popup-overlay">
+  <div class="popup-card" style="max-height:90vh;overflow:hidden;">
+
+    <!-- Progress Bar -->
+    <div style="display:flex;gap:6px;margin-bottom:24px;">
+      <div id="progress1" class="progress-step active"></div>
+      <div id="progress2" class="progress-step"></div>
+      <div id="progress3" class="progress-step"></div>
+      <div id="progress4" class="progress-step"></div>
+      <div id="progress5" class="progress-step"></div>
+    </div>
+
+    <!-- Step 1: Avatar Selection -->
+    <div id="step1" class="onboarding-step active">
+      <div class="recap-mascot">🦉</div>
+      <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Choose Your Avatar!</h2>
+      <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Pick an emoji that represents you</p>
+
+      <div style="text-align:center;margin-bottom:32px;">
+        <div id="onboardingAvatarPreview" style="width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.2);border:4px solid rgba(255,255,255,0.4);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:60px;cursor:pointer;transition:all 0.3s;" onclick="openOnboardingAvatarPicker()">
+          <span>👤</span>
+        </div>
+        <button onclick="openOnboardingAvatarPicker()" style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);color:white;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+          Choose Avatar
+        </button>
+      </div>
+
+      <button class="recap-primary" onclick="nextStep(2)">Next →</button>
+    </div>
+
+    <!-- Step 2: Why Learning -->
+    <div id="step2" class="onboarding-step">
+      <div class="recap-mascot">🦉</div>
+      <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Why Russian?</h2>
+      <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Tell us what motivates you</p>
+
+      <textarea id="studyReason" placeholder="e.g., I want to travel to Russia next year, connect with family, read Russian literature..."
+        style="width:100%;min-height:120px;border-radius:12px;padding:16px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;font-size:15px;font-family:inherit;margin-bottom:24px;"></textarea>
+
+      <div style="display:flex;gap:10px;">
+        <button class="recap-secondary" onclick="prevStep(1)" style="flex:1;">← Back</button>
+        <button class="recap-primary" onclick="nextStep(3)" style="flex:2;">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Goal -->
+    <div id="step3" class="onboarding-step">
+      <div class="recap-mascot">🦉</div>
+      <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">What's Your Goal?</h2>
+      <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Choose your main learning objective</p>
+
+      <div class="goal-selector">
+        <div class="goal-option" data-goal="Travel ✈️" onclick="selectGoalOption(this)">
+          <div class="goal-icon">✈️</div>
+          <div class="goal-label">Travel</div>
+        </div>
+        <div class="goal-option" data-goal="Work 💼" onclick="selectGoalOption(this)">
+          <div class="goal-icon">💼</div>
+          <div class="goal-label">Work</div>
+        </div>
+        <div class="goal-option" data-goal="Study 📚" onclick="selectGoalOption(this)">
+          <div class="goal-icon">📚</div>
+          <div class="goal-label">Study</div>
+        </div>
+        <div class="goal-option" data-goal="Fun 🎮" onclick="selectGoalOption(this)">
+          <div class="goal-icon">🎮</div>
+          <div class="goal-label">Fun</div>
+        </div>
+      </div>
+      <input type="hidden" id="studyGoal" value="Travel ✈️">
+
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button class="recap-secondary" onclick="prevStep(2)" style="flex:1;">← Back</button>
+        <button class="recap-primary" onclick="nextStep(4)" style="flex:2;">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Current Level -->
+    <div id="step4" class="onboarding-step">
+      <div class="recap-mascot">🦉</div>
+      <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Current Level?</h2>
+      <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">How much Russian do you know?</p>
+
+      <div class="level-selector">
+        <div class="level-option" data-level="Beginner 🌱" onclick="selectLevelOption(this)">
+          <div class="level-icon">🌱</div>
+          <div class="level-label">Beginner</div>
+          <div class="level-desc">Starting from scratch</div>
+        </div>
+        <div class="level-option" data-level="Intermediate 📖" onclick="selectLevelOption(this)">
+          <div class="level-icon">📖</div>
+          <div class="level-label">Intermediate</div>
+          <div class="level-desc">Know some basics</div>
+        </div>
+        <div class="level-option" data-level="Advanced 🏆" onclick="selectLevelOption(this)">
+          <div class="level-icon">🏆</div>
+          <div class="level-label">Advanced</div>
+          <div class="level-desc">Fluent speaker</div>
+        </div>
+      </div>
+      <input type="hidden" id="studyLevel" value="Beginner 🌱">
+
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button class="recap-secondary" onclick="prevStep(3)" style="flex:1;">← Back</button>
+        <button class="recap-primary" onclick="nextStep(5)" style="flex:2;">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Daily Goal -->
+    <div id="step5" class="onboarding-step">
+      <div class="recap-mascot">🦉</div>
+      <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Daily Practice Goal</h2>
+      <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">How much time can you commit?</p>
+
+      <div class="daily-goal-selector">
+        <div class="daily-option" data-minutes="5" onclick="selectDailyGoal(this)">
+          <div class="daily-time">5 min</div>
+          <div class="daily-emoji">🏃</div>
+          <div class="daily-desc">Casual</div>
+        </div>
+        <div class="daily-option active" data-minutes="10" onclick="selectDailyGoal(this)">
+          <div class="daily-time">10 min</div>
+          <div class="daily-emoji">⭐</div>
+          <div class="daily-desc">Recommended</div>
+        </div>
+        <div class="daily-option" data-minutes="15" onclick="selectDailyGoal(this)">
+          <div class="daily-time">15 min</div>
+          <div class="daily-emoji">💪</div>
+          <div class="daily-desc">Serious</div>
+        </div>
+      </div>
+      <input type="hidden" id="dailyGoal" value="10">
+
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button class="recap-secondary" onclick="prevStep(4)" style="flex:1;">← Back</button>
+        <button class="recap-primary" onclick="submitOnboarding()" style="flex:2;">🦉 Start My Journey!</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RECAP MODAL -->
+<div id="recapModal" class="popup-overlay">
+  <div class="popup-card" id="recapContent"></div>
+</div>
+
+<!-- AVATAR PICKER MODAL FOR ONBOARDING -->
+<div id="onboardingAvatarModal" class="avatar-modal" aria-hidden="true">
+  <div class="avatar-modal-card">
+    <div class="avatar-modal-header">
+      <h3>Choose Your Avatar 🦉</h3>
+      <button class="avatar-close" onclick="closeOnboardingAvatarPicker()" aria-label="Close">&times;</button>
+    </div>
+    <div id="onboardingAvatarGrid" class="avatar-grid"></div>
+    <button class="avatar-save" onclick="saveOnboardingAvatar()">Select Avatar</button>
+  </div>
+</div>
+
+</body>
+</html>

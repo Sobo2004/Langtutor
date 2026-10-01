@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TTS Test</title>
+</head>
+<body>
+  <h1>Speech Test Page</h1>
+  
+  <h2>Test Text-to-Speech (Speaker)</h2>
+  <button onclick="testSpeaker()" style="font-size:24px;padding:20px;">🔊 Test Speaker</button>
+  
+  <h2>Test Speech Recognition (Mic)</h2>
+  <button onclick="testMic()" style="font-size:24px;padding:20px;">🎤 Test Mic</button>
+  <div id="result" style="margin-top:20px;font-size:18px;"></div>
+  
+  <script>
+    function testSpeaker() {
+      console.log('Testing speaker...');
+      
+      if (!('speechSynthesis' in window)) {
+        alert('❌ speechSynthesis NOT supported in your browser!');
+        return;
+      }
+      
+      alert('✅ speechSynthesis IS supported! Speaking now...');
+      
+      const utterance = new SpeechSynthesisUtterance('Hello, this is a test');
+      utterance.lang = 'en-US';
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      
+      utterance.onstart = () => console.log('Speech started');
+      utterance.onend = () => console.log('Speech ended');
+      utterance.onerror = (e) => {
+        console.error('Speech error:', e);
+        alert('❌ Speech error: ' + e.error);
+      };
+      
+      speechSynthesis.speak(utterance);
+      console.log('Speak command sent');
+    }
+    
+    function testMic() {
+      console.log('Testing mic...');
+      
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('❌ Speech Recognition NOT supported in your browser!');
+        return;
+      }
+      
+      alert('✅ Speech Recognition IS supported! Starting...');
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => {
+        console.log('Mic started');
+        document.getElementById('result').textContent = '🎤 Listening... Speak now!';
+      };
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log('Heard:', transcript);
+        document.getElementById('result').textContent = '✅ You said: ' + transcript;
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Recognition error:', event.error);
+        document.getElementById('result').textContent = '❌ Error: ' + event.error;
+      };
+      
+      recognition.onend = () => {
+        console.log('Mic stopped');
+      };
+      
+      try {
+        recognition.start();
+        console.log('Recognition started');
+      } catch (e) {
+        console.error('Start error:', e);
+        alert('❌ Error starting: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

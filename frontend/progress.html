@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress — LangTutor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background:#f5f7fa; min-height:100vh; }
+
+    /* header */
+    .header {
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff; padding:20px 32px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .header h1 { font-size:22px; }
+    .nav-links a {
+      color:#fff; text-decoration:none; margin-left:20px;
+      font-size:14px; opacity:0.85;
+    }
+    .nav-links a:hover { opacity:1; text-decoration:underline; }
+
+    /* stat cards */
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; padding:24px 32px 0; max-width:1100px; margin:0 auto; }
+    .stat-card {
+      background:#fff; border-radius:14px; padding:20px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.07);
+      text-align:center;
+    }
+    .stat-card .icon { font-size:28px; margin-bottom:6px; }
+    .stat-card .val { font-size:30px; font-weight:700; color:#333; }
+    .stat-card .label { font-size:12px; color:#888; margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+
+    /* chart */
+    .chart-section { max-width:1100px; margin:24px auto 0; padding:0 32px; }
+    .card {
+      background:#fff; border-radius:14px; padding:24px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.07); margin-bottom:20px;
+    }
+    .card h2 { font-size:16px; color:#333; margin-bottom:16px; }
+    canvas { width:100%; height:auto; display:block; }
+
+    /* table */
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #eee; }
+    th { background:#f8f9fa; color:#666; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+    td { color:#444; }
+    .badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:600; }
+    .badge-xp { background:#e8f5e9; color:#2e7d32; }
+    .badge-word { background:#ede7f6; color:#5e35b1; }
+    .badge-msg { background:#e3f2fd; color:#1565c0; }
+    .empty { color:#999; font-size:14px; padding:30px 0; text-align:center; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📈 My Progress</h1>
+  <div class="nav-links">
+    <a href="/">← Chat</a>
+    <a href="/leaderboard">🏆 Leaderboard</a>
+  </div>
+</div>
+
+<div class="stats" id="statsRow">
+  <div class="stat-card"><div class="icon">⭐</div><div class="val" id="statXP">—</div><div class="label">Total XP</div></div>
+  <div class="stat-card"><div class="icon">🔥</div><div class="val" id="statStreak">—</div><div class="label">Day Streak</div></div>
+  <div class="stat-card"><div class="icon">📚</div><div class="val" id="statWords">—</div><div class="label">Words Learned</div></div>
+  <div class="stat-card"><div class="icon">🏅</div><div class="val" id="statLevel">—</div><div class="label">Level</div></div>
+  <div class="stat-card"><div class="icon">📝</div><div class="val" id="statQuizzes">—</div><div class="label">Quizzes Taken</div></div>
+  <div class="stat-card"><div class="icon">🎯</div><div class="val" id="statAvgScore">—</div><div class="label">Avg Quiz Score</div></div>
+</div>
+
+<div class="chart-section">
+  <div class="card">
+    <h2>XP over time (last 30 days)</h2>
+    <canvas id="chart" width="960" height="280"></canvas>
+  </div>
+  <div class="card">
+    <h2>📝 Quiz History</h2>
+    <div id="quizHistoryWrap"><div class="empty">No quizzes taken yet. <a href="/quiz" style="color:#667eea;">Take your first quiz!</a></div></div>
+  </div>
+  <div class="card">
+    <h2>Recent activity</h2>
+    <div id="tableWrap"><div class="empty">No activity yet.</div></div>
+  </div>
+</div>
+
+<script src="/static/progress.js?v=3"></script>
+</body>
+</html>

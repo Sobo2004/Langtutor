@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — LangTutor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    body { background:#f5f7fa; min-height:100vh; }
+
+    .header {
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff; padding:20px 32px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .header h1 { font-size:22px; }
+    .nav-links a { color:#fff; text-decoration:none; margin-left:20px; font-size:14px; opacity:0.85; }
+    .nav-links a:hover { opacity:1; text-decoration:underline; }
+
+    .container { max-width:720px; margin:32px auto; padding:0 24px; }
+
+    /* top 3 podium */
+    .podium { display:flex; justify-content:center; align-items:flex-end; gap:12px; margin-bottom:32px; }
+    .podium-item { text-align:center; }
+    .podium-item .avatar {
+      width:64px; height:64px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:26px; margin:0 auto 8px; color:#fff; font-weight:700;
+    }
+    .podium-item .name { font-size:13px; font-weight:600; color:#333; }
+    .podium-item .xp   { font-size:12px; color:#888; }
+    .podium-item .rank { font-size:22px; margin-bottom:4px; }
+
+    .podium-item.first  .avatar { background:linear-gradient(135deg,#f9a825,#f57f17); width:80px; height:80px; font-size:32px; }
+    .podium-item.second .avatar { background:linear-gradient(135deg,#78909c,#546e7a); }
+    .podium-item.third  .avatar { background:linear-gradient(135deg,#d84315,#bf360c); }
+
+    /* rest of the list */
+    .card {
+      background:#fff; border-radius:14px; padding:0;
+      box-shadow:0 2px 10px rgba(0,0,0,0.07); overflow:hidden;
+    }
+    .card-header { padding:16px 20px; border-bottom:1px solid #f0f0f0; font-weight:600; color:#333; font-size:15px; }
+
+    .lb-row {
+      display:flex; align-items:center; padding:12px 20px;
+      border-bottom:1px solid #f5f5f5; gap:14px;
+    }
+    .lb-row:last-child { border-bottom:none; }
+    .lb-row .rank { width:24px; text-align:center; font-weight:700; color:#888; font-size:14px; }
+    .lb-row .avatar-sm {
+      width:36px; height:36px; border-radius:50%;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:14px; font-weight:700; flex-shrink:0;
+    }
+    .lb-row .info { flex:1; }
+    .lb-row .info .name { font-size:14px; font-weight:600; color:#333; }
+    .lb-row .info .meta { font-size:12px; color:#999; margin-top:2px; }
+    .lb-row .xp-badge {
+      background:#ede7f6; color:#5e35b1;
+      padding:4px 10px; border-radius:999px;
+      font-size:13px; font-weight:700; white-space:nowrap;
+    }
+
+    .empty { text-align:center; color:#999; padding:40px 0; font-size:15px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏆 Leaderboard</h1>
+  <div class="nav-links">
+    <a href="/">← Chat</a>
+    <a href="/progress">📈 My Progress</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="podium" id="podium"></div>
+  <div class="card">
+    <div class="card-header">All Players</div>
+    <div id="listWrap"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
+<script>
+(async function() {
+  var res  = await fetch('/api/leaderboard');
+  var data = await res.json();
+  var list = data.leaderboard || [];
+
+  if (!list.length) {
+    document.getElementById('podium').innerHTML = '';
+    document.getElementById('listWrap').innerHTML = '<div class="empty">No players yet — be the first!</div>';
+    return;
+  }
+
+  // ---- podium (top 3) ----
+  var podiumOrder = [1, 0, 2]; // second, first, third (visual order)
+  var podiumClasses = ['second','first','third'];
+  var podiumIcons   = ['🥈','🥇','🥉'];
+  var podiumHtml = '';
+  podiumOrder.forEach(function(idx, pos) {
+    if (idx >= list.length) return;
+    var u = list[idx];
+    var avatarDisplay = u.avatar || u.username.charAt(0).toUpperCase();
+    podiumHtml +=
+      '<div class="podium-item ' + podiumClasses[pos] + '">' +
+        '<div class="rank">' + podiumIcons[pos] + '</div>' +
+        '<div class="avatar">' + avatarDisplay + '</div>' +
+        '<div class="name">' + u.username + '</div>' +
+        '<div class="xp">' + u.xp + ' XP</div>' +
+      '</div>';
+  });
+  document.getElementById('podium').innerHTML = podiumHtml;
+
+  // ---- full list (skip top 3, already in podium) ----
+  var html = '';
+  list.forEach(function(u, i) {
+    if (i < 3) return; // already in podium
+    var avatarDisplay = u.avatar || u.username.charAt(0).toUpperCase();
+    html +=
+      '<div class="lb-row">' +
+        '<div class="rank">' + (i+1) + '</div>' +
+        '<div class="avatar-sm">' + avatarDisplay + '</div>' +
+        '<div class="info">' +
+          '<div class="name">' + u.username + '</div>' +
+          '<div class="meta">Level ' + u.level + ' · ' + u.streak + ' day streak</div>' +
+        '</div>' +
+        '<div class="xp-badge">' + u.xp + ' XP</div>' +
+      '</div>';
+  });
+  document.getElementById('listWrap').innerHTML = html || '<div class="empty">Only 3 players so far — keep learning!</div>';
+})();
+</script>
+</body>
+</html>
