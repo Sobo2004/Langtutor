@@ -49,6 +49,10 @@ def _ensure_user_columns():
         alters.append("ALTER TABLE users ADD COLUMN avatar TEXT")
     if "daily_goal" not in cols:
         alters.append("ALTER TABLE users ADD COLUMN daily_goal INTEGER DEFAULT 10")
+    if "has_seen_tour" not in cols:
+        alters.append("ALTER TABLE users ADD COLUMN has_seen_tour INTEGER DEFAULT 0")
+        # Users who signed up before the tour existed aren't shown it automatically
+        alters.append("UPDATE users SET has_seen_tour=1 WHERE has_completed_onboarding=1")
     for sql in alters:
         try:
             con.execute(sql)
@@ -98,6 +102,12 @@ def _extract_taught_word(assistant_text: str):
     """
     if not assistant_text:
         return None
+    # New format: structured word card
+    card = _parse_word_card(assistant_text)
+    if card:
+        return {"word": str(card["word"]).strip()[:60],
+                "pronunciation": str(card.get("pron", "")).strip()[:60],
+                "meaning": str(card.get("meaning", "")).strip()[:120]}
     # Prefer the first bolded token/phrase
     m = re.search(r"\*\*([^*]{1,60})\*\*\s*(?:\(([^)]{1,60})\))?", assistant_text)
     if not m:
@@ -187,6 +197,27 @@ def onboarding_status(session_id: Optional[str] = Cookie(default=None)):
     row = con.execute("SELECT has_completed_onboarding FROM users WHERE id=?", (user_id,)).fetchone()
     con.close()
     return {"show": (row is not None and int(row["has_completed_onboarding"] or 0) == 0)}
+
+@app.get("/tour/status")
+def tour_status(session_id: Optional[str] = Cookie(default=None)):
+    """Show Mila's website tour to users who finished onboarding but haven't completed/skipped the tour."""
+    user_id = _require_user(session_id)
+    _ensure_user_columns()
+    con = db()
+    row = con.execute("SELECT has_completed_onboarding, has_seen_tour FROM users WHERE id=?", (user_id,)).fetchone()
+    con.close()
+    show = row is not None and int(row["has_completed_onboarding"] or 0) == 1 and int(row["has_seen_tour"] or 0) == 0
+    return {"show": show}
+
+@app.post("/tour/done")
+def tour_done(session_id: Optional[str] = Cookie(default=None)):
+    user_id = _require_user(session_id)
+    _ensure_user_columns()
+    con = db()
+    con.execute("UPDATE users SET has_seen_tour=1 WHERE id=?", (user_id,))
+    con.commit()
+    con.close()
+    return {"ok": True}
 
 @app.post("/onboarding/submit")
 def submit_onboarding(data: OnboardingData, session_id: Optional[str] = Cookie(default=None)):
@@ -323,6 +354,136 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
+# Mila is the tutor character across the whole app (chat, quiz, voice)
+MILA_PERSONA = {
+    "ru-en": (
+        "Тебя зовут Мила (Mila). Ты дружелюбный, тёплый и весёлый репетитор английского языка в приложении LangTutor. "
+        "Говори от первого лица как Мила, хвали за успехи, мягко исправляй ошибки и подбадривай. "
+        "Если спрашивают, кто ты — ты Мила, репетитор LangTutor."
+    ),
+    "en-ru": (
+        "Your name is Mila. You are a warm, upbeat and encouraging Russian tutor in the LangTutor app. "
+        "Speak in the first person as Mila, celebrate progress, correct mistakes gently and keep the learner motivated. "
+        "If asked who you are, you are Mila, LangTutor's tutor."
+    ),
+}
+
+# New words are sent as a structured card the chat page turns into an interactive
+# lesson (word card → quick check → pronunciation practice → reply buttons).
+WORD_CARD_FORMAT = {
+    "en-ru": """📇 OUTPUT FORMAT — this OVERRIDES any formatting rules above:
+When you teach a NEW Russian word or phrase, write ONE short friendly sentence in English, then on its own line a word card exactly like this:
+[[WORD {"word": "Спасибо", "pron": "spa-SEE-ba", "meaning": "Thank you", "say": "Спасибо! That's how you say thank you. Listen again: Спасибо. You can use it with anyone, friends or strangers. For example: Спасибо за помощь! Thanks for the help!", "example": "Спасибо за помощь!", "example_meaning": "Thanks for the help!", "check": {"question": "Which one means \\"Thank you\\"?", "options": ["Пожалуйста", "Спасибо", "Привет"], "answer": 1}}]]
+Card rules:
+- Valid JSON on ONE line. Nothing after the closing ]].
+- "say": what you say OUT LOUD while showing the card, like a warm tutor talking to a beginner: 2-4 short spoken sentences in English that include the Russian word (say it twice), when to use it, and the example with its meaning. No emojis, no brackets, no romanisation.
+- "check": a quick question about the new word with exactly 3 Russian options, one correct; "answer" is its index (0-2). Vary where the right answer is.
+- Do NOT add "try using it in a sentence" — the app runs the practice.
+- Never mention the card, JSON or any format in your sentence (never write "Here's the word card").
+- One new word per message, never one already taught in this conversation.
+When the student asks for the next word, teach it straight away with a card.
+When the student is NOT asking for a new word (a question, a practice sentence, "I don't understand", "another example"), reply in short, friendly plain text WITHOUT a word card.
+For "another example": write ONE short friendly sentence in English, then on its own line an example card exactly like this (nothing after it):
+[[EXAMPLE {"sentence": "Спасибо, что пришёл!", "translation": "Thanks for coming!"}]]""",
+    "ru-en": """📇 ФОРМАТ ОТВЕТА — он ВАЖНЕЕ любых правил форматирования выше:
+Когда учишь НОВОЕ английское слово или фразу, напиши ОДНО короткое дружелюбное предложение по-русски, а затем отдельной строкой карточку слова точно так:
+[[WORD {"word": "Thank you", "pron": "сэнк ю", "meaning": "Спасибо", "say": "Thank you! Так по-английски говорят спасибо. Послушай ещё раз: Thank you. Это можно сказать кому угодно. Например: Thank you for your help! Спасибо за помощь!", "example": "Thank you for your help!", "example_meaning": "Спасибо за помощь!", "check": {"question": "Что значит «Спасибо» по-английски?", "options": ["Please", "Thank you", "Hello"], "answer": 1}}]]
+Правила карточки:
+- Корректный JSON в ОДНУ строку. После ]] ничего не пиши.
+- "say": что ты говоришь ВСЛУХ, показывая карточку, как тёплый репетитор новичку: 2-4 коротких разговорных предложения по-русски, где английское слово звучит дважды, сказано когда его использовать, и пример с переводом. Без эмодзи, скобок и транскрипции.
+- "check": быстрый вопрос по новому слову, ровно 3 варианта на английском, один правильный; "answer" — его индекс (0-2). Меняй позицию правильного ответа.
+- НЕ добавляй «попробуй составить предложение» — практику проводит приложение.
+- Никогда не упоминай карточку, JSON или формат (не пиши «вот карточка слова»).
+- Одно новое слово за сообщение, никогда не повторяй уже изученные в этом разговоре.
+Когда студент просит следующее слово — сразу учи его с карточкой.
+Если студент НЕ просит новое слово (вопрос, своё предложение, «не понимаю», «ещё пример»), отвечай коротко и дружелюбно обычным текстом БЕЗ карточки слова.
+На «ещё пример»: напиши ОДНО короткое дружелюбное предложение по-русски, а затем отдельной строкой карточку примера точно так (после неё ничего):
+[[EXAMPLE {"sentence": "Thank you for coming!", "translation": "Спасибо, что пришёл!"}]]""",
+}
+
+# Added to the student's message so the reply buttons get the right kind of answer
+CHAT_INTENT_NOTES = {
+    "en-ru": {
+        "default": "(If you teach a new word, you must include the [[WORD ...]] card.)",
+        "next": "(The student wants the NEXT new word: teach one new word now, with a [[WORD ...]] card.)",
+        "example": "(Give ONE new example sentence using the word the student mentions, as an [[EXAMPLE ...]] card with its English translation. Do NOT teach a new word and do NOT include a [[WORD ...]] card.)",
+        "explain": "(Explain the word the student mentions more simply, in 2-3 short sentences, maybe with a memory tip. Do NOT teach a new word and do NOT include a card.)",
+        "build": "(Give the student ONE new sentence to build for the grammar point they mention: one short encouraging sentence, then on its own line [[BUILD {\"translation\": \"<English meaning>\", \"parts\": [{\"t\": \"<Russian block>\", \"role\": \"subject\"}, ...]}]] with 3-6 blocks in the neutral order. No other card.)",
+    },
+    "ru-en": {
+        "default": "(Если учишь новое слово — обязательно добавь карточку [[WORD ...]].)",
+        "next": "(Студент хочет СЛЕДУЮЩЕЕ новое слово: научи одному новому слову сейчас, с карточкой [[WORD ...]].)",
+        "example": "(Дай ОДИН новый пример предложения с упомянутым словом в виде карточки [[EXAMPLE ...]] с переводом на русский. НЕ учи новое слово и НЕ добавляй карточку [[WORD ...]].)",
+        "explain": "(Объясни упомянутое слово проще, в 2-3 коротких предложениях, можно с подсказкой для запоминания. НЕ учи новое слово и НЕ добавляй карточку.)",
+        "build": "(Дай студенту ОДНО новое предложение для сборки по упомянутой теме грамматики: одна короткая ободряющая фраза, затем отдельной строкой [[BUILD {\"translation\": \"<перевод на русский>\", \"parts\": [{\"t\": \"<английский блок>\", \"role\": \"subject\"}, ...]}]] из 3-6 блоков. Других карточек не добавляй.)",
+    },
+}
+
+# Grammar lessons: Mila's "Colour Blocks" method. Every sentence is made of coloured
+# blocks (one colour per part of speech); the chat page draws them and runs a
+# sentence builder where the learner taps the blocks into the right order.
+_ROLES = "subject, verb, object, adjective, adverb, article, pronoun, preposition, place, time, question, negation, connector, other"
+GRAMMAR_CARD_FORMAT = {
+    "ru-en": f"""🧱 GRAMMAR LESSON FORMAT (Mila's Colour Blocks method). Teach ENGLISH grammar to a Russian speaker in detail, step by step, like a patient tutor, always comparing with Russian: what is the same, what is different, and the simple pattern for building sentences. Every sentence is built from coloured blocks; block roles are: {_ROLES}.
+Write ONE short friendly sentence in Russian, then on its own line a grammar card like this example (valid JSON on ONE line, nothing after it):
+[[GRAMMAR {{"title": "Существительные в английском", "explain": "В английском у существительных нет рода и нет падежей, поэтому они почти не меняются. Зато перед ними обычно стоит артикль a/an или the, которого в русском нет.", "points": [{{"head": "Нет рода", "text": "table, book, window — просто 'it', без мужского и женского рода", "examples": "a table, a book, a window"}}, {{"head": "Множественное число", "text": "обычно добавляем -s или -es", "examples": "cats, books, boxes"}}, {{"head": "Артикли", "text": "a/an — какой-то один предмет, the — конкретный, известный", "examples": "a cat, the cat"}}], "rule": [{{"t": "Article", "role": "article"}}, {{"t": "Noun", "role": "subject"}}, {{"t": "Verb", "role": "verb"}}], "compare": {{"target": "I see a cat. The cat is black.", "native": "Я вижу кошку. Кошка чёрная.", "note": "По-русски «кошку» меняет окончание, а в английском cat не меняется — его роль показывает место в предложении и артикль."}}, "examples": [{{"parts": [{{"t": "The dog", "role": "subject"}}, {{"t": "likes", "role": "verb"}}, {{"t": "the ball", "role": "object"}}], "translation": "Собака любит мяч.", "note": "the dog и the ball не меняются, хотя в русском было бы «собака» и «мяч»."}}, {{"parts": [{{"t": "I", "role": "pronoun"}}, {{"t": "have", "role": "verb"}}, {{"t": "two cats", "role": "object"}}], "translation": "У меня две кошки.", "note": "Множественное число: cat → cats, просто добавили -s."}}, {{"parts": [{{"t": "An apple", "role": "subject"}}, {{"t": "is", "role": "verb"}}, {{"t": "on the table", "role": "place"}}], "translation": "Яблоко на столе.", "note": "an перед гласным звуком (an apple), a перед согласным (a table)."}}], "tip": "Запомни: английское существительное почти никогда не меняется — меняются только -s во множественном числе и артикль перед ним.", "check": {{"question": "Как правильно: «Я вижу кошку»?", "options": ["I see cats a.", "I see a cat.", "I a cat see."], "answer": 1}}, "build": {{"translation": "У моего брата есть собака.", "parts": [{{"t": "My brother", "role": "subject"}}, {{"t": "has", "role": "verb"}}, {{"t": "a dog", "role": "object"}}]}}}}]]
+Rules:
+- Explanations, "points" text, notes, tip and translations in Russian; "points" examples, "rule" blocks, "compare.target", example "parts", "check" options and "build" parts in English.
+- "explain": 2-3 clear sentences. "points": 2-4 key rules, each with real examples. "examples": exactly 3 sentences, each with a "note" explaining WHY it is built that way. "tip": one memory trick.
+- "rule" is the sentence PATTERN for this lesson as 2-6 blocks (e.g. Subject + Verb + Object, Article + Noun, Subject + do/does + not + Verb) — never a list of categories.
+- Give every block its true role; use "other" only when nothing else fits. "parts" in order make the full sentence.
+- "build": 3-6 blocks with exactly one correct order. Never mention the card or JSON.
+- The card above only shows the FORMAT: write fresh content for the lesson you are teaching and never copy its sentences or examples.""",
+    "en-ru": f"""🧱 GRAMMAR LESSON FORMAT (Mila's Colour Blocks method). Teach RUSSIAN grammar to an English speaker in detail, step by step, like a patient tutor, always comparing with English: what is the same, what is different, and the simple pattern for building sentences. Every sentence is built from coloured blocks; block roles are: {_ROLES}.
+Write ONE short friendly sentence in English, then on its own line a grammar card like this example (valid JSON on ONE line, nothing after it):
+[[GRAMMAR {{"title": "Russian nouns have gender", "explain": "Every Russian noun is masculine, feminine or neuter. English nouns have no gender, so this is new for you. The good news: the last letter of the word usually tells you the gender.", "points": [{{"head": "Masculine", "text": "usually ends in a consonant", "examples": "стол, дом, брат"}}, {{"head": "Feminine", "text": "usually ends in -а or -я", "examples": "книга, мама, неделя"}}, {{"head": "Neuter", "text": "usually ends in -о or -е", "examples": "окно, море, молоко"}}], "rule": [{{"t": "Adjective", "role": "adjective"}}, {{"t": "Noun", "role": "subject"}}, {{"t": "Verb", "role": "verb"}}], "compare": {{"target": "Новый стол. Новая книга. Новое окно.", "native": "A new table. A new book. A new window.", "note": "In Russian the adjective changes its ending to match the noun's gender; in English 'new' never changes."}}, "examples": [{{"parts": [{{"t": "Мой брат", "role": "subject"}}, {{"t": "читает", "role": "verb"}}, {{"t": "книгу", "role": "object"}}], "translation": "My brother is reading a book.", "note": "брат is masculine (ends in a consonant); книга is feminine and becomes книгу because it is the object."}}, {{"parts": [{{"t": "Новое", "role": "adjective"}}, {{"t": "окно", "role": "subject"}}, {{"t": "очень большое", "role": "adjective"}}], "translation": "The new window is very big.", "note": "окно is neuter (-о), so both adjectives end in -ое."}}, {{"parts": [{{"t": "Мама", "role": "subject"}}, {{"t": "любит", "role": "verb"}}, {{"t": "кофе", "role": "object"}}], "translation": "Mum loves coffee.", "note": "мама ends in -а like a feminine noun; кофе is a famous exception: it is masculine."}}], "tip": "Look at the last letter: a consonant means 'he', -а or -я means 'she', -о or -е means 'it'.", "check": {{"question": "Which noun is feminine?", "options": ["стол", "книга", "окно"], "answer": 1}}, "build": {{"translation": "My sister has a new car.", "parts": [{{"t": "У моей сестры", "role": "subject"}}, {{"t": "есть", "role": "verb"}}, {{"t": "новая машина", "role": "object"}}]}}}}]]
+Rules:
+- Explanations, "points" text, notes, tip and translations in English; "points" examples, "rule" blocks may be English labels, "compare.target", example "parts", "check" options and "build" parts in Russian.
+- "explain": 2-3 clear sentences. "points": 2-4 key rules, each with real examples. "examples": exactly 3 sentences, each with a "note" explaining WHY it is built that way. "tip": one memory trick.
+- "rule" is the sentence PATTERN for this lesson as 2-6 blocks (e.g. Subject + Verb + Object, Adjective + Noun) — never a list of categories.
+- Give every block its true role; use "other" only when nothing else fits. "parts" in order make the full sentence. "build" uses the neutral, most natural order, 3-6 blocks.
+- Never mention the card or JSON.
+- The card above only shows the FORMAT: write fresh content for the lesson you are teaching and never copy its sentences or examples.""",
+}
+
+_GRAMMAR_CARD_RE = re.compile(r"\[\[GRAMMAR\s*(\{.*\})\s*\]\]", re.S)
+
+def _parse_grammar_card(text: str) -> Optional[dict]:
+    m = _GRAMMAR_CARD_RE.search(text or "")
+    if not m:
+        return None
+    try:
+        card = json.loads(m.group(1))
+    except Exception:
+        return None
+    return card if isinstance(card, dict) and str(card.get("title", "")).strip() else None
+
+# Added to the student's message when the course decides which word comes next
+COURSE_NOTES = {
+    "en-ru": {
+        "teach": "(Course lesson, topic «{topic}». Teach EXACTLY this next item now: «{word}» (meaning: {meaning}), with a [[WORD ...]] card whose \"word\" is exactly «{word}». Teach nothing else.)",
+        "topic_done": "(The student has just learnt every word in the topic «{topic}». Congratulate them warmly in 1-2 sentences and tell them they can take the final quiz or start the next topic. Do NOT teach a new word and do NOT include a card.)",
+        "grammar": "(Course grammar lesson, topic «{topic}»: «{title}». Cover: {focus} Teach it now with a [[GRAMMAR ...]] card using the Colour Blocks method. Teach nothing else.)",
+    },
+    "ru-en": {
+        "teach": "(Урок курса, тема «{topic}». Научи РОВНО этому следующему слову: «{word}» (значение: {meaning}), с карточкой [[WORD ...]], где \"word\" — ровно «{word}». Больше ничему не учи.)",
+        "topic_done": "(Студент выучил все слова темы «{topic}». Тепло поздравь его в 1-2 предложениях и скажи, что можно пройти итоговый тест или начать следующую тему. НЕ учи новое слово и НЕ добавляй карточку.)",
+        "grammar": "(Урок грамматики курса, тема «{topic}»: «{title}». Содержание: {focus} Объясни это сейчас с карточкой [[GRAMMAR ...]] по методу цветных блоков. Больше ничему не учи.)",
+    },
+}
+
+_WORD_CARD_RE = re.compile(r"\[\[WORD\s*(\{.*\})\s*\]\]", re.S)
+
+def _parse_word_card(text: str) -> Optional[dict]:
+    m = _WORD_CARD_RE.search(text or "")
+    if not m:
+        return None
+    try:
+        card = json.loads(m.group(1))
+    except Exception:
+        return None
+    return card if isinstance(card, dict) and str(card.get("word", "")).strip() else None
+
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 
@@ -363,9 +524,30 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 # ✅ because your JS/CSS are inside frontend/ directly
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
+@app.middleware("http")
+async def revalidate_static(request, call_next):
+    """Make browsers check for updated JS/CSS instead of running a stale cached copy."""
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+def _versioned_page(filename: str) -> HTMLResponse:
+    """Serve an HTML page with its /static/*.js and *.css URLs versioned by file
+    modification time, so browsers never run a stale cached copy."""
+    html = (FRONTEND_DIR / filename).read_text(encoding="utf-8")
+
+    def stamp(m):
+        asset = FRONTEND_DIR / m.group(2)
+        version = int(asset.stat().st_mtime) if asset.exists() else 0
+        return f'{m.group(1)}="/static/{m.group(2)}?v={version}"'
+
+    html = re.sub(r'(src|href)="/static/([\w.-]+\.(?:js|css))(?:\?v=[^"]*)?"', stamp, html)
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
+
 @app.get("/")
 def home():
-    return FileResponse(FRONTEND_DIR / "index.html")
+    return _versioned_page("index.html")
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page():
@@ -862,7 +1044,7 @@ def llm_stream(system_prompt, messages):
             stream = openai_client().chat.completions.create(
             model=OPENAI_MODEL,
             messages=api_messages,
-            max_tokens=800,
+            max_tokens=1800,   # grammar lessons are long cards
             temperature=0.6,
             stream=True
             )
@@ -907,6 +1089,8 @@ class ChatRequest(BaseModel):
     message: str
     language_mode: Optional[str] = 'en-ru'
     difficulty: Optional[str] = None
+    intent: Optional[str] = None   # set by the chat's reply buttons: next | example | explain
+    topic: Optional[str] = None    # course topic picked in the sidebar
 
 
 def extract_difficulty(text: str) -> Optional[str]:
@@ -916,6 +1100,188 @@ def extract_difficulty(text: str) -> Optional[str]:
     if m:
         return m.group(1).lower()
     return None
+
+# ================== COURSE (fixed word lists per topic, see course.json) ==================
+COURSE_FILE = BASE_DIR / "course.json"
+ROUND_SIZE = 5
+_course_cache = {"mtime": None, "data": None}
+
+def load_course() -> dict:
+    """course.json, reloaded automatically when the file is edited."""
+    mtime = COURSE_FILE.stat().st_mtime
+    if _course_cache["mtime"] != mtime:
+        _course_cache["data"] = json.loads(COURSE_FILE.read_text(encoding="utf-8"))
+        _course_cache["mtime"] = mtime
+    return _course_cache["data"]
+
+def _init_course_table():
+    con = db()
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS course_learnt (
+            user_id TEXT NOT NULL,
+            language_mode TEXT NOT NULL,
+            level_id TEXT NOT NULL,
+            topic_id TEXT NOT NULL,
+            item_idx INTEGER NOT NULL,
+            learnt_at TEXT NOT NULL,
+            UNIQUE(user_id, language_mode, level_id, topic_id, item_idx)
+        )""")
+    con.commit()
+    con.close()
+
+def _is_grammar(item: dict) -> bool:
+    return "focus" in item
+
+def _target_and_meaning(item: dict, language_mode: str):
+    """English speakers learn the Russian; Russian speakers learn the English.
+    Grammar items: (lesson title in the learner's language, what the lesson covers)."""
+    if _is_grammar(item):
+        return item["title"][_ui_lang(language_mode)], item["focus"][language_mode]
+    return (item["ru"], item["en"]) if language_mode == "en-ru" else (item["en"], item["ru"])
+
+def _ui_lang(language_mode: str) -> str:
+    return "en" if language_mode == "en-ru" else "ru"
+
+def _learnt_indexes(user_id: str, language_mode: str) -> dict:
+    """{(level_id, topic_id): set(item_idx)}"""
+    _init_course_table()
+    con = db()
+    rows = con.execute(
+        "SELECT level_id, topic_id, item_idx FROM course_learnt WHERE user_id=? AND language_mode=?",
+        (user_id, language_mode),
+    ).fetchall()
+    con.close()
+    learnt = {}
+    for r in rows:
+        learnt.setdefault((r["level_id"], r["topic_id"]), set()).add(r["item_idx"])
+    return learnt
+
+def _find_topic(level_id: str, topic_id: str):
+    for level in load_course()["levels"]:
+        if level["id"] == level_id:
+            for topic in level["topics"]:
+                if topic["id"] == topic_id:
+                    return level, topic
+    return None, None
+
+def _course_overview(user_id: str, language_mode: str, difficulty: str) -> dict:
+    """Every level/topic with progress. A level unlocks when the previous one is done,
+    or straight away if the learner's chosen difficulty is at least that level's style."""
+    rank = {"beginner": 0, "intermediate": 1, "advanced": 2}
+    learnt = _learnt_indexes(user_id, language_mode)
+    ui = _ui_lang(language_mode)
+    levels, prev_done = [], True
+    for i, level in enumerate(load_course()["levels"]):
+        topics = []
+        for topic in level["topics"]:
+            n = len(learnt.get((level["id"], topic["id"]), set()))
+            total = len(topic["items"])
+            topics.append({"id": topic["id"], "emoji": topic.get("emoji", ""), "name": topic["name"][ui],
+                           "learnt": min(n, total), "total": total, "done": n >= total})
+        unlocked = i == 0 or prev_done or rank.get(difficulty, 0) >= rank.get(level.get("style"), 0)
+        done = all(t["done"] for t in topics)
+        levels.append({"id": level["id"], "name": level["name"][ui], "unlocked": unlocked, "done": done,
+                       "grammar": level.get("kind") == "grammar", "topics": topics})
+        prev_done = done
+    return {"levels": levels}
+
+def _active_topic(user_id: str, language_mode: str, difficulty: str, requested: Optional[str] = None):
+    """The topic being studied: the one the user picked, else the saved one, else the first unfinished one."""
+    state = get_lesson_state(user_id)
+    course_state = state.setdefault("course", {})
+    overview = _course_overview(user_id, language_mode, difficulty)
+
+    def find(topic_id):
+        for level in overview["levels"]:
+            if level["unlocked"]:
+                for t in level["topics"]:
+                    if t["id"] == topic_id:
+                        return level["id"], topic_id
+        return None
+
+    choice = find(requested) if requested else None
+    if not choice and course_state.get(language_mode):
+        choice = find(course_state[language_mode])
+    if not choice:
+        for level in overview["levels"]:
+            if level["unlocked"]:
+                for t in level["topics"]:
+                    if not t["done"]:
+                        choice = (level["id"], t["id"])
+                        break
+            if choice:
+                break
+    if choice and course_state.get(language_mode) != choice[1]:
+        course_state[language_mode] = choice[1]
+        save_lesson_state(user_id, state)
+    return choice
+
+def _course_snapshot(user_id: str, language_mode: str, difficulty: str, topic_hint: Optional[tuple] = None) -> Optional[dict]:
+    """Progress of the active topic, for the chat header and the end-of-round/topic/level cards."""
+    choice = topic_hint or _active_topic(user_id, language_mode, difficulty)
+    if not choice:
+        return None
+    level, topic = _find_topic(*choice)
+    if not topic:
+        return None
+    ui = _ui_lang(language_mode)
+    learnt = sorted(_learnt_indexes(user_id, language_mode).get((level["id"], topic["id"]), set()))
+    total = len(topic["items"])
+    n = len(learnt)
+    round_idx = (n - 1) // ROUND_SIZE if n else 0
+    round_words = [_target_and_meaning(topic["items"][i], language_mode)[0]
+                   for i in learnt if round_idx * ROUND_SIZE <= i < (round_idx + 1) * ROUND_SIZE]
+
+    overview = _course_overview(user_id, language_mode, difficulty)
+    this_level = next(l for l in overview["levels"] if l["id"] == level["id"])
+    next_topic = next((t for t in this_level["topics"] if not t["done"] and t["id"] != topic["id"]), None)
+    level_pos = [l["id"] for l in overview["levels"]].index(level["id"])
+    next_level = overview["levels"][level_pos + 1] if level_pos + 1 < len(overview["levels"]) else None
+
+    return {
+        "level": {"id": level["id"], "name": level["name"][ui], "done": this_level["done"]},
+        "topic": {"id": topic["id"], "name": topic["name"][ui], "emoji": topic.get("emoji", "")},
+        "grammar": level.get("kind") == "grammar",
+        "learnt": n, "total": total,
+        "round": round_idx + 1, "rounds": -(-total // ROUND_SIZE),
+        "in_round": (n - 1) % ROUND_SIZE + 1 if n else 0,
+        "round_words": round_words,
+        "topic_words": [_target_and_meaning(it, language_mode)[0] for it in topic["items"]],
+        "topic_done": n >= total,
+        "next_topic": next_topic,
+        "next_level": ({"id": next_level["id"], "name": next_level["name"],
+                        "first_topic": next_level["topics"][0] if next_level["topics"] else None}
+                       if next_level and this_level["done"] else None),
+    }
+
+def _next_course_item(user_id: str, language_mode: str, level_id: str, topic_id: str):
+    level, topic = _find_topic(level_id, topic_id)
+    if not topic:
+        return None
+    done = _learnt_indexes(user_id, language_mode).get((level_id, topic_id), set())
+    for idx, item in enumerate(topic["items"]):
+        if idx not in done:
+            return idx, item, level, topic
+    return None
+
+def _mark_learnt(user_id: str, language_mode: str, level_id: str, topic_id: str, idx: int):
+    _init_course_table()
+    con = db()
+    con.execute(
+        "INSERT OR IGNORE INTO course_learnt(user_id, language_mode, level_id, topic_id, item_idx, learnt_at) VALUES(?,?,?,?,?,?)",
+        (user_id, language_mode, level_id, topic_id, idx, datetime.now().isoformat(timespec="seconds")),
+    )
+    con.commit()
+    con.close()
+
+@app.get("/api/course")
+def api_course(language_mode: str = "en-ru", difficulty: str = "beginner", session_id: Optional[str] = Cookie(default=None)):
+    """The course map (sidebar) and the active topic's progress (chat header)."""
+    user_id = _require_user(session_id)
+    language_mode = language_mode if language_mode in ("en-ru", "ru-en") else "en-ru"
+    overview = _course_overview(user_id, language_mode, difficulty)
+    snapshot = _course_snapshot(user_id, language_mode, difficulty)
+    return {**overview, "active": snapshot}
 
 @app.post("/chat/stream")
 def chat_stream(req: ChatRequest, response: Response, session_id: Optional[str]=Cookie(default=None)):
@@ -975,134 +1341,73 @@ def chat_stream(req: ChatRequest, response: Response, session_id: Optional[str]=
     }
     lesson_topic = topic_names.get(lesson_key, lesson_key.title())
 
-    # ── System prompts ────────────────────────────────────────────────────────
+    # ── Course: "Next word" or a topic picked in the sidebar → the next word from course.json ──
+    user_difficulty = difficulty          # unlocks levels; `difficulty` may switch to the level's style
+    course_topic = None                   # (level_id, topic_id) being studied
+    course_item = None                    # (idx, item, level, topic) Mila must teach now
+    course_note = None
+    if req.topic or req.intent == "next":
+        course_topic = _active_topic(user_id, language_mode, user_difficulty, req.topic)
+        if course_topic:
+            level, topic = _find_topic(*course_topic)
+            course_item = _next_course_item(user_id, language_mode, *course_topic)
+            lesson_key, lesson_topic = topic["id"], topic["name"]["en"]
+            difficulty = level.get("style", difficulty)
+            topic_name = topic["name"][_ui_lang(language_mode)]
+            if course_item and _is_grammar(course_item[1]):
+                title, focus = _target_and_meaning(course_item[1], language_mode)
+                course_note = COURSE_NOTES[language_mode]["grammar"].format(title=title, focus=focus, topic=topic_name)
+            elif course_item:
+                target, meaning = _target_and_meaning(course_item[1], language_mode)
+                course_note = COURSE_NOTES[language_mode]["teach"].format(word=target, meaning=meaning, topic=topic_name)
+            else:
+                course_note = COURSE_NOTES[language_mode]["topic_done"].format(topic=topic_name)
+
+    # ── System prompts: Mila's persona + level guide + word-card format ──────
+    # The chat page turns each new word into a card with a quick check, so the
+    # prompts only define what to teach; WORD_CARD_FORMAT defines how.
     if language_mode == "ru-en":
-        if difficulty == "beginner":
-            system_prompt = (
-                "Ты AI репетитор АНГЛИЙСКОГО языка для русскоговорящих студентов.\n\n"
-                "🔴 КРИТИЧЕСКИ ВАЖНО - МАКСИМАЛЬНАЯ СТРОГОСТЬ:\n"
-                "▶ В КАЖДОМ сообщении учи ТОЛЬКО ОДНО английское слово!\n"
-                "▶ ЗАПРЕЩЕНО учить 2, 3, 4+ слов в одном сообщении!\n"
-                "▶ СТОП после обучения одному слову - ЖДИ ответа студента!\n"
-                "▶ НЕ продолжай учить следующее слово пока студент не ответит!\n\n"
-                "✅ ПРАВИЛЬНО (одно слово):\n"
-                "**Hello** 🔊 (хэ-ЛОУ) - Привет\n"
-                "Example: 🔊 Hello! How are you? — Привет! Как дела?\n"
-                "Попробуй использовать это слово в предложении!\n\n"
-                "❌ НЕПРАВИЛЬНО (несколько слов - ЗАПРЕЩЕНО!):\n"
-                "**Hello** - Привет\n"
-                "**Friend** - Друг ← НЕТ! Это уже второе слово!\n"
-                "**Thanks** - Спасибо ← НЕТ! Это третье слово!\n\n"
-                "📖 ПОШАГОВЫЙ ПРОЦЕСС:\n\n"
-                "ШАГ 1 - ОДНО НОВОЕ СЛОВО (точный формат):\n"
-                "**ENGLISH WORD** 🔊 (транскрипция) - русский перевод\n"
-                "Example: English sentence 🔊 — Русский перевод\n"
-                "Попробуй использовать это слово!\n"
-                ">>> СТОП! ЖДИ ответа студента! НЕ учи следующее слово!\n\n"
-                "ШАГ 2 - СТУДЕНТ ПИШЕТ ПРЕДЛОЖЕНИЕ:\n"
-                "Дай отзыв: 'Отлично! ✓' или 'Хорошо, но...'\n"
-                "Задай тест: 'Как сказать \"[фраза]\" используя это слово?'\n"
-                ">>> СТОП! ЖДИ ответа на тест!\n\n"
-                "ШАГ 3 - СТУДЕНТ ОТВЕЧАЕТ НА ТЕСТ:\n"
-                "Оцени ответ\n"
-                "Если правильно: 'Отлично! ✓ Ты освоил это слово!'\n"
-                ">>> ТОЛЬКО СЕЙЧАС можешь учить следующее слово!\n\n"
-                "🚫 АБСОЛЮТНЫЙ ЗАПРЕТ:\n"
-                "- НЕ учи Hello, Friend, Thanks в одном сообщении!\n"
-                "- НЕ пиши списки слов!\n"
-                "- НЕ пропускай ожидание ответа студента!\n"
-                "- ОДНО слово = ОДНО сообщение → ЖДИ → следующее слово"
-            )
-        elif difficulty == "intermediate":
-            system_prompt = (
-                "Ты AI репетитор АНГЛИЙСКОГО (средний уровень).\n\n"
-                "🔴 СТРОГО: ОДНО слово в сообщении - НЕ БОЛЬШЕ!\n\n"
-                "Формат: **ENGLISH WORD** + грамматика + пример\n"
-                "СТОП! Жди практики студента → отзыв → тест\n"
-                "ТОЛЬКО после правильного ответа → следующее слово\n\n"
-                "ЗАПРЕЩЕНО учить несколько слов подряд!\n"
-                "ОДНО слово → СТОП → ЖДИ ответа → следующее"
-            )
-        else:
-            system_prompt = (
-                "Ты AI репетитор АНГЛИЙСКОГО (продвинутый).\n\n"
-                "🔴 СТРОГО: ОДНА концепция в сообщении!\n\n"
-                "Учи ОДНУ идиому/фразу → СТОП → практика → тест → следующая\n"
-                "ЗАПРЕЩЕНО несколько концепций подряд!\n"
-                "Проверяй историю - не повторяй изученное!"
-            )
-        tutor_prompt = (
-            f"Студент просит: {user_msg}\n\n"
-            "⚠️ КРИТИЧЕСКИ ВАЖНО:\n"
-            "- Учи ТОЛЬКО ОДНО английское слово в этом сообщении!\n"
-            "- НЕ учи 2, 3, 4 слова одновременно!\n"
-            "- После обучения одному слову - СТОП, ЖДИ ответа студента!\n"
-            "- НЕ начинай следующее слово пока студент не попрактикуется!\n\n"
-            "НАЧНИ с ОДНОГО английского слова (не русского)!"
+        level_guide = {
+            "beginner": "Уровень: начинающий. Учи простые частые английские слова и короткие фразы. Объясняй очень просто.",
+            "intermediate": "Уровень: средний. Учи полезные фразы и короткие предложения; если нужно, добавь короткую грамматическую подсказку.",
+            "advanced": "Уровень: продвинутый. Учи идиомы, устойчивые выражения и тонкие различия в значении.",
+        }[difficulty]
+        system_prompt = (
+            f"Ты учишь русскоговорящего студента АНГЛИЙСКОМУ языку. Тема урока: {lesson_topic}.\n"
+            f"{level_guide}\n"
+            "Правила:\n"
+            "- Объяснения, отзывы и вопросы — по-русски; по-английски только изучаемые слова и примеры.\n"
+            "- Одно новое слово за сообщение. Никаких списков слов.\n"
+            "- Если студент пишет своё предложение — похвали, мягко исправь ошибки и коротко объясни.\n"
+            "- Смотри историю разговора и не повторяй уже изученные слова."
         )
+        tutor_prompt = f"Студент: {user_msg}\n\n{course_note or CHAT_INTENT_NOTES['ru-en'].get(req.intent, CHAT_INTENT_NOTES['ru-en']['default'])}"
 
     else:
-        # Teaching Russian to English speakers
         level_guide = {
-            "beginner": (
-                "You are an AI Russian tutor teaching ENGLISH-speaking students.\n\n"
-                "⚠️ CRITICAL RULES:\n"
-                "1. Teach ONLY ONE WORD per message - NEVER multiple words!\n"
-                "2. ALL explanations = ENGLISH ONLY (except the Russian word itself)\n"
-                "3. WAIT for student to practice before teaching next word\n"
-                "4. ALWAYS put 🔊 icon before example sentences for audio practice!\n\n"
-                "📖 TEACHING FLOW - EXACT FORMAT TO FOLLOW:\n\n"
-                "STEP 1 - TEACH ONE NEW WORD:\n"
-                "**RUSSIAN WORD** 🔊 (pronunciation) - English meaning\n"
-                "Example: Russian sentence 🔊 — English translation\n"
-                "Try using this word in a sentence!\n\n"
-                "STEP 2 - STUDENT PRACTICES (writes their sentence):\n"
-                "Give feedback: 'Great pronunciation! ✓' or 'Good try, but...'\n"
-                "Correct any mistakes\n"
-                "Ask a test question: 'How would you say \"[English phrase]\" using this word?'\n\n"
-                "STEP 3 - STUDENT ANSWERS TEST:\n"
-                "Give feedback on their answer\n"
-                "If correct: 'Perfect! ✓ You've mastered this word!'\n"
-                "ONLY NOW → Teach the NEXT word (go back to STEP 1)\n\n"
-                "🚫 NEVER teach 2+ words in one message!\n"
-                "🚫 NEVER skip waiting for student practice!\n"
-                "✅ ONE word → practice → test → feedback → NEXT word"
-            ),
-            "intermediate": (
-                "You are an AI Russian tutor for ENGLISH-speaking students (intermediate).\n\n"
-                "⚠️ CRITICAL: Teach ONE word at a time!\n"
-                "ALL text = ENGLISH except the Russian word being taught!\n\n"
-                "Format: **RUSSIAN WORD** + grammar notes + 1 example\n"
-                "Wait for student to practice → give feedback → test with question\n"
-                "ONLY after student answers correctly → teach next word\n"
-                "Never teach multiple words in one message!"
-            ),
-            "advanced": (
-                "You are an AI Russian tutor for ENGLISH-speaking students (advanced).\n\n"
-                "⚠️ ONE concept at a time (idiom/phrase/aspect)\n"
-                "Explain EVERYTHING in ENGLISH! Only Russian in Russian.\n\n"
-                "Teach → student practices → test → feedback → next concept\n"
-                "Never teach multiple concepts in one message!\n"
-                "All explanations = ENGLISH ONLY!"
-            )
-        }
+            "beginner": "Level: beginner. Teach simple, very common Russian words and short phrases. Keep explanations very simple.",
+            "intermediate": "Level: intermediate. Teach useful phrases and short sentences; add a brief grammar tip when it helps.",
+            "advanced": "Level: advanced. Teach idioms, set expressions and subtle differences in meaning.",
+        }[difficulty]
         system_prompt = (
-            f"You are an expert Russian language tutor for ENGLISH speakers. Topic: {lesson_topic}. "
-            f"{level_guide[difficulty]} "
-            "\n\n🔒 ABSOLUTE RULES:\n"
-            "1. Teach ONLY ONE WORD per message - NEVER multiple words at once!\n"
-            "2. ALL explanations, feedback, questions = ENGLISH ONLY!\n"
-            "3. ONLY the Russian word itself is in Russian\n"
-            "4. WAIT for student to practice before teaching next word\n"
-            "5. Test student's understanding with a question\n"
-            "6. ONLY after student answers correctly → teach next word\n"
-            "7. FORMAT: **Привет** 🔊 (pree-VYET) - Hello\n"
-            "8. Example format: Example: Привет! Как дела? 🔊 — Hello! How are you?\n"
-            "9. NEVER write instructions in Russian (like 'Теперь попробуй...')\n"
-            "10. ONE word → practice → test → next word (strict sequential order!)\n"
-            "11. Check conversation history - don't teach what was already taught"
+            f"You teach RUSSIAN to an English-speaking student. Lesson topic: {lesson_topic}.\n"
+            f"{level_guide}\n"
+            "Rules:\n"
+            "- Explanations, feedback and questions in ENGLISH; only the Russian words and examples are in Russian.\n"
+            "- One new word per message. Never write word lists.\n"
+            "- If the student writes their own sentence, praise them, gently correct mistakes and explain briefly.\n"
+            "- Check the conversation history and never re-teach a word."
         )
-        tutor_prompt = f"Student: {user_msg}"
+        tutor_prompt = f"Student: {user_msg}\n\n{course_note or CHAT_INTENT_NOTES['en-ru'].get(req.intent, CHAT_INTENT_NOTES['en-ru']['default'])}"
+
+    # Grammar lessons (and "build another sentence") use Mila's Colour Blocks format
+    grammar_lesson = bool(course_item and _is_grammar(course_item[1])) or req.intent == "build"
+    system_prompt = (
+        MILA_PERSONA.get(language_mode, MILA_PERSONA["en-ru"]) + "\n\n"
+        + system_prompt + "\n\n"
+        + WORD_CARD_FORMAT.get(language_mode, WORD_CARD_FORMAT["en-ru"])
+        + ("\n\n" + GRAMMAR_CARD_FORMAT[language_mode] if grammar_lesson else "")
+    )
 
     # ── Stream with conversation history ──────────────────────────────────────
     def gen():
@@ -1124,20 +1429,36 @@ def chat_stream(req: ChatRequest, response: Response, session_id: Optional[str]=
             # No post-processing needed - JavaScript handles speaker buttons
             save_chat_message(user_id, "assistant", full)
 
-            # Save taught word/phrase for recap (best-effort)
+            # Save taught word/phrase for recap (best-effort; grammar lessons aren't vocabulary)
+            grammar_card = _parse_grammar_card(full)
             try:
-                _save_taught_word(user_id, full, lesson_key, difficulty, language_mode)
+                if not grammar_card:
+                    _save_taught_word(user_id, full, lesson_key, difficulty, language_mode)
             except Exception as _e:
                 pass
 
-            # Track word completion: Count every bold word as a taught word
-            if re.search(r'\*\*[^\*]{2,}\*\*', full):
+            # Track word completion: a word card (or, in older replies, a bold word) means a new word
+            if grammar_card or _parse_word_card(full) or re.search(r'\*\*[^\*]{2,}\*\*', full):
                 # Log word completion for any message with bold words
                 update_xp(user_id, 3, "word_complete")
             else:
                 # Regular message XP (feedback, questions, etc)
                 update_xp(user_id, 3, "message")
             uu = get_user(user_id)
+
+            # Course progress: the taught course word is now learnt
+            course = None
+            try:
+                taught_card = _parse_word_card(full) or grammar_card
+                if course_item and taught_card:
+                    idx, _item, level, topic = course_item
+                    _mark_learnt(user_id, language_mode, level["id"], topic["id"], idx)
+                course = _course_snapshot(user_id, language_mode, user_difficulty, course_topic)
+                if course:
+                    course["just_learnt"] = bool(course_item and taught_card)
+                    course["topic_done_reply"] = bool(course_topic and not course_item)
+            except Exception as _e:
+                print("COURSE ERROR:", _e)
 
             # Count completed words
             con = db()
@@ -1152,6 +1473,7 @@ def chat_stream(req: ChatRequest, response: Response, session_id: Optional[str]=
                 "progress": {"xp": uu["xp"], "level": uu["level"],
                              "streak": uu["streak"],
                              "words_completed": words_count},
+                "course": course,
                 "quiz_ready": False,
                 "quiz": []
             })
@@ -1593,7 +1915,7 @@ def profile_page():
 
 @app.get("/quiz", response_class=HTMLResponse)
 def quiz_page():
-    return (FRONTEND_DIR / "quiz.html").read_text(encoding="utf-8")
+    return _versioned_page("quiz.html")
 
 @app.get("/test-tts.html", response_class=HTMLResponse)
 def test_tts_page():
@@ -1834,6 +2156,11 @@ class QuizGenerateRequest(BaseModel):
     category: str = "greetings"        # greetings | travel | food | mixed
     difficulty: str = "beginner"       # beginner | intermediate | advanced
     count: int = 10
+    batch: int = 0                     # which parallel batch this is (varies the question styles)
+    batch_total: int = 1               # how many batches the quiz is split into
+    source: str = "topic"              # "topic" (category) or "lessons" (words taught in chat)
+    words: Optional[list] = None       # lessons: only these words (a chat round), else all learnt words
+    grammar_topic: Optional[str] = None  # "level_id/topic_id": a grammar topic's final quiz
 
 class QuizSubmitRequest(BaseModel):
     category: str
@@ -1859,7 +2186,72 @@ def _extract_json_object(text: str) -> Optional[dict]:
     except Exception:
         return None
 
-def _quiz_system_prompt_mcq(language_mode: str, category: str, difficulty: str, count: int) -> str:
+# The frontend requests the quiz in small parallel batches; each batch leans on
+# different MCQ styles so the batches don't repeat each other.
+_QUIZ_BATCH_FOCUS = [
+    "Mostly style 1 (translation) and style 4 (meaning).",
+    "Mostly style 1 (translation) and style 2 (correct reply).",
+    "Mostly style 3 (fill the blank) and style 1 (translation), using different words than usual.",
+    "Mostly style 4 (meaning) and style 2 (correct reply), using less obvious everyday phrases.",
+]
+
+# Style names in each UI language, so the model doesn't mix languages in "prompt"
+_QUIZ_STYLE_NAMES = {
+    "ru-en": ['"Выберите перевод"', '"Выберите правильный ответ"', '"Заполните пропуск"', '"Что это означает?"'],
+    "en-ru": ['"Choose the translation"', '"Choose the correct reply"', '"Fill in the blank"', '"What does this mean?"'],
+}
+
+def _lesson_words(user_id: str, language_mode: str, limit: int = 30) -> list:
+    """Words/phrases Mila taught this user in chat (newest first), one entry per word,
+    preferring the saved copy that has a meaning."""
+    con = db()
+    rows = con.execute(
+        """SELECT word, meaning, lesson FROM taught_words
+             WHERE user_id=? AND language_mode=?
+             ORDER BY id DESC LIMIT 200""",
+        (user_id, language_mode),
+    ).fetchall()
+    con.close()
+
+    words = {}
+    for r in rows:
+        word = (r["word"] or "").strip()
+        key = word.lower().rstrip("?!.")
+        if not word:
+            continue
+        meaning = (r["meaning"] or "").strip()
+        if key not in words:
+            words[key] = {"word": word, "meaning": meaning, "lesson": r["lesson"] or ""}
+        elif meaning and not words[key]["meaning"]:
+            words[key]["meaning"] = meaning
+    return list(words.values())[:limit]
+
+def _prefer_lesson_questions(questions: list, lesson_words: list) -> list:
+    """Put questions that practise a learnt word first. Matching is loose (word stem,
+    case- and ё-insensitive) because Russian words change their endings."""
+    def norm(s: str) -> str:
+        return re.sub(r"[^\w\s]", "", (s or "").lower().replace("ё", "е"))
+
+    stems = {norm(w["word"])[:5] for w in lesson_words if norm(w["word"]).strip()}
+
+    def uses_lesson_word(q: dict) -> bool:
+        text = norm(q["q"] + " " + q["options"][q["correct"]])
+        return any(stem in text for stem in stems)
+
+    on_topic = [q for q in questions if uses_lesson_word(q)]
+    return on_topic + [q for q in questions if not uses_lesson_word(q)]
+
+@app.get("/api/quiz/lesson-words")
+def api_quiz_lesson_words(language_mode: str = "en-ru", session_id: Optional[str] = Cookie(default=None)):
+    """Words the user has learnt in chat — shown on the quiz setup screen."""
+    user_id = get_user_from_session(session_id) if session_id else None
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    words = _lesson_words(user_id, language_mode if language_mode in ("ru-en", "en-ru") else "en-ru")
+    return {"count": len(words), "words": words}
+
+def _quiz_system_prompt_mcq(language_mode: str, category: str, difficulty: str, count: int, batch: int = 0,
+                            lesson_words: Optional[list] = None) -> str:
     """
     MCQ only, but Duolingo-like variety using MCQ formats.
     ru-en: Russian UI, teach English (questions RU, options EN)
@@ -1895,29 +2287,56 @@ You are generating a quiz for English speakers learning RUSSIAN.
         "advanced": "Advanced: nuanced meaning, near-synonyms, trickier distractors.",
     }.get(difficulty, "Beginner")
 
+    styles = _QUIZ_STYLE_NAMES.get(language_mode, _QUIZ_STYLE_NAMES["en-ru"])
+
+    if lesson_words and lesson_words[0].get("grammar"):
+        target = "ENGLISH" if language_mode == "ru-en" else "RUSSIAN"
+        point_lines = "\n".join(f"- {w['word']}: {w['meaning']}" for w in lesson_words)
+        topic_block = f"""GRAMMAR REVIEW: the learner studied these {target} grammar points:
+{point_lines}
+- EVERY question must test one of these grammar points, e.g. "Choose the correct sentence", fill the blank with the right form, the right word order, or "Which word is the verb/subject/object?".
+- Options are {target} words or sentences; exactly one is correct, the others are typical learner mistakes.
+- Spread the questions across the grammar points."""
+    elif lesson_words:
+        word_lines = "\n".join(
+            f"- {w['word']}" + (f" — {w['meaning']}" if w.get("meaning") else "") for w in lesson_words
+        )
+        topic_block = f"""LESSON REVIEW: the learner was taught these words/phrases in their chat lessons:
+{word_lines}
+- EVERY question must practise one of these words/phrases (the correct option should be or contain it).
+- Spread the questions across different words; only reuse a word if there are fewer words than questions.
+- Wrong options can be other common words, but keep them plausible.
+- If a meaning is missing above, use the usual meaning of the word."""
+    else:
+        topic_block = f"TOPIC: {category_guide}"
+
     return f"""
 You are a quiz generator. Output STRICT JSON ONLY. No markdown. No extra text.
 
 {mode_rules}
 
-TOPIC: {category_guide}
+{topic_block}
 DIFFICULTY: {diff_guide}
 COUNT: {count}
 
-Make the quiz feel like Duolingo BUT MCQ ONLY. Use a mix of these MCQ styles:
-1) "Выберите перевод" / "Choose the translation"
-2) "Выберите правильный ответ" / "Choose the correct reply"
-3) "Заполните пропуск" / "Fill the blank" (still MCQ options)
-4) "Что это означает?" / "What does this mean?"
+Make the quiz feel like Duolingo. Use a mix of these question styles
+(the "prompt" field is the style name exactly as written here):
+1) {styles[0]} — "q" is a word/phrase to translate; options are translations
+2) {styles[1]} — "q" is something someone says; options are possible replies
+3) {styles[2]} — "q" is a sentence in the TARGET language with "___" for the missing word
+4) {styles[3]} — "q" is a phrase; options are possible meanings
+FOCUS FOR THIS SET: {_QUIZ_BATCH_FOCUS[batch % len(_QUIZ_BATCH_FOCUS)]}
 
 Return JSON with this schema:
 {{
   "questions": [
     {{
-      "prompt": "instruction in UI language",
-      "q": "question text in UI language",
+      "style": 1,  // which style (1-4) above
+      "prompt": "style name, in the UI language",
+      "q": "question text",
       "options": ["A","B","C","D"],   // target language
       "correct": 0,  // INDEX (0-3) of the CORRECT answer in options array
+      "accepted": ["other correct ways to write the answer, e.g. without punctuation or with a common synonym"],
       "explanation": "helpful hint that DOES NOT reveal the answer"
     }}
   ]
@@ -1943,7 +2362,7 @@ CRITICAL RULES:
    - Safe content only
 """
 
-def _llm_generate_quiz_json(system_prompt: str) -> dict:
+def _llm_generate_quiz_json(system_prompt: str, count: int) -> dict:
     """Generate quiz JSON using LLM (synchronous for OpenAI, async handled at call site for Ollama)"""
     if LLM_PROVIDER == "openai":
         client = openai_client()
@@ -1953,8 +2372,9 @@ def _llm_generate_quiz_json(system_prompt: str) -> dict:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": "Generate the quiz JSON now."}
             ],
-            max_tokens=1400,
+            max_tokens=250 * count + 200,
             temperature=0.7,
+            response_format={"type": "json_object"},
         )
         text = resp.choices[0].message.content or ""
         data = _extract_json_object(text)
@@ -2010,7 +2430,11 @@ def _validate_mcq_payload(payload: dict, count: int) -> dict:
         if not isinstance(correct, int) or correct < 0 or correct > 3:
             continue
 
+        style = item.get("style")
+        accepted = item.get("accepted")
         cleaned.append({
+            "style": style if isinstance(style, int) and 1 <= style <= 4 else 0,
+            "accepted": [a.strip() for a in accepted if isinstance(a, str) and a.strip()][:6] if isinstance(accepted, list) else [],
             "prompt": str(prompt).strip(),
             "q": q.strip(),
             "options": [o.strip() for o in options],
@@ -2045,16 +2469,92 @@ def api_quiz_generate(req: QuizGenerateRequest, session_id: Optional[str] = Cook
         difficulty = "beginner"
 
     count = int(req.count or 10)
-    count = max(5, min(30, count))
+    count = max(1, min(30, count))
 
-    system_prompt = _quiz_system_prompt_mcq(language_mode, category, difficulty, count)
+    batch = max(0, int(req.batch or 0))
+    lesson_words = None
+    if (req.source or "").strip().lower() == "lessons":
+        words = _lesson_words(user_id, language_mode, limit=200)
+        if req.grammar_topic:
+            # Grammar topic: quiz the grammar points from course.json
+            level_id, _, topic_id = req.grammar_topic.partition("/")
+            _level, topic = _find_topic(level_id, topic_id)
+            words = [{"word": it["title"]["en"], "meaning": it["focus"][language_mode], "grammar": True}
+                     for it in (topic or {}).get("items", []) if _is_grammar(it)]
+        elif req.words:
+            # A chat round: quiz just these words (meanings come from what Mila taught)
+            known = {w["word"].lower(): w for w in words}
+            words = [known.get(str(w).strip().lower(), {"word": str(w).strip()[:60], "meaning": "", "lesson": ""})
+                     for w in req.words[:20] if str(w).strip()]
+        else:
+            words = words[:30]
+        if len(words) < 3:
+            raise HTTPException(status_code=400, detail="Not enough lesson words yet")
+        # Give each parallel batch its own share of the words so batches don't repeat each other
+        batch_total = max(1, int(req.batch_total or 1))
+        share = words[batch % batch_total::batch_total]
+        lesson_words = share if len(share) >= 2 else words
+
+    # Lesson quizzes ask for one spare question so any that drifts off the learnt words can be dropped
+    ask = count + 1 if lesson_words else count
+    system_prompt = _quiz_system_prompt_mcq(language_mode, category, difficulty, ask, batch, lesson_words)
 
     try:
-        payload = _llm_generate_quiz_json(system_prompt)
-        return _validate_mcq_payload(payload, count)
+        payload = _llm_generate_quiz_json(system_prompt, ask)
+        result = _validate_mcq_payload(payload, ask)
+        if lesson_words:
+            preferred = result["questions"] if lesson_words[0].get("grammar") else _prefer_lesson_questions(result["questions"], lesson_words)
+            result["questions"] = preferred[:count]
+        return result
     except Exception as e:
         print("QUIZ GENERATION ERROR:", e)
         raise HTTPException(status_code=500, detail="Quiz generation failed")
+
+# ================== TTS (natural tutor voice) ==================
+OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts")
+OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "coral")
+TTS_INSTRUCTIONS = os.getenv(
+    "TTS_INSTRUCTIONS",
+    "You are Mila, a warm, upbeat and encouraging language tutor. "
+    "Speak naturally and clearly, a little slower than normal conversation, "
+    "with a friendly smile in your voice. Pronounce the words like a native speaker of that language.",
+)
+TTS_CACHE_DIR = Path(__file__).parent / "tts_cache"
+
+class TTSRequest(BaseModel):
+    text: str
+
+@app.post("/api/tts")
+def api_tts(req: TTSRequest, session_id: Optional[str] = Cookie(default=None)):
+    """Speak text with OpenAI TTS. Audio is cached on disk so repeated phrases are free."""
+    if not session_id or not get_user_from_session(session_id):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if LLM_PROVIDER != "openai" or not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="TTS not configured")
+
+    text = (req.text or "").strip()
+    if not text or len(text) > 400:
+        raise HTTPException(status_code=400, detail="Text must be 1-400 characters")
+
+    key = hashlib.sha256(f"{OPENAI_TTS_MODEL}|{OPENAI_TTS_VOICE}|{TTS_INSTRUCTIONS}|{text}".encode("utf-8")).hexdigest()
+    cache_file = TTS_CACHE_DIR / f"{key}.mp3"
+    if not cache_file.exists():
+        extra = {"instructions": TTS_INSTRUCTIONS} if "gpt-4o" in OPENAI_TTS_MODEL else None
+        try:
+            audio = openai_client().audio.speech.create(
+                model=OPENAI_TTS_MODEL,
+                voice=OPENAI_TTS_VOICE,
+                input=text,
+                response_format="mp3",
+                extra_body=extra,
+            )
+        except Exception as e:
+            print("TTS ERROR:", e)
+            raise HTTPException(status_code=502, detail="TTS failed")
+        TTS_CACHE_DIR.mkdir(exist_ok=True)
+        cache_file.write_bytes(audio.content)
+
+    return FileResponse(cache_file, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=604800"})
 
 # ================== QUIZ SUBMIT (AWARD XP + SAVE SCORE) ==================
 def _calc_quiz_xp(total_q: int, correct: int, hearts_left: int, ended_early: bool) -> int:
@@ -2084,7 +2584,7 @@ async def api_quiz_submit(req: QuizSubmitRequest, session_id: Optional[str] = Co
         raise HTTPException(status_code=401, detail="Invalid session")
 
     category = (req.category or "greetings").strip().lower()
-    if category not in ("greetings", "travel", "food", "mixed"):
+    if category not in ("greetings", "travel", "food", "mixed", "lessons"):
         category = "greetings"
 
     difficulty = (req.difficulty or "beginner").strip().lower()

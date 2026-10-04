@@ -1188,3 +1188,275 @@ footer button:hover {
   transform: translateY(-2px);
 }
 
+
+/* ===== Mila in the chat ===== */
+.mila-header { display: flex; align-items: center; gap: 12px; }
+.mila-header .mila-face { width: 56px; height: 56px; }
+.mila-header h2 { margin: 0; }
+.mila-status { font-size: 13px; font-weight: 600; color: #28a745; }
+.mila-header-right { display: flex; align-items: center; gap: 10px; }
+.mila-mute {
+  border: none; background: #f3f4ff; border-radius: 10px;
+  width: 36px; height: 36px; cursor: pointer; font-size: 16px;
+}
+.mila-mute:hover { background: #e9eaff; }
+
+/* Mila's avatar beside each of her messages */
+.messages .message.bot { position: relative; margin-left: 46px; }
+.messages .message.bot::before {
+  content: "";
+  position: absolute;
+  left: -46px;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  background: url("/static/mila.svg") center / contain no-repeat;
+}
+
+/* "Mila is typing" dots */
+.message.bot.typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+.message.bot.typing span {
+  width: 7px; height: 7px; border-radius: 50%; background: #9aa0c3;
+  animation: mila-typing 1s infinite;
+}
+.message.bot.typing span:nth-child(2) { animation-delay: 0.15s; }
+.message.bot.typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes mila-typing { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+/* Mila replaces the old owl mascot */
+.mascot .mila-img { width: 64px; height: 64px; }
+.recap-mascot .mila-img { width: 72px; height: 72px; }
+.popup-icon .mila-img { width: 80px; height: 80px; }
+
+/* ===== Website tour (tour.js) ===== */
+.tour-blocker { position: fixed; inset: 0; z-index: 9998; }
+.tour-spot {
+  position: fixed;
+  z-index: 9999;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(20, 16, 50, 0.6), 0 0 0 3px #ffd700;
+  pointer-events: none;
+  transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+.tour-spot.center { left: 50% !important; top: 50% !important; width: 0 !important; height: 0 !important; box-shadow: 0 0 0 9999px rgba(20, 16, 50, 0.6); }
+.tour-card {
+  position: fixed;
+  z-index: 10000;
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  background: #fff;
+  color: #222;
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  animation: popIn 0.25s ease;
+  transition: left 0.3s ease, top 0.3s ease;
+}
+.tour-card.center { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 360px; text-align: center; }
+.tour-head { display: flex; align-items: center; gap: 10px; }
+.tour-card.center .tour-head { flex-direction: column; }
+.tour-mila { width: 44px; height: 44px; flex-shrink: 0; }
+.tour-card.center .tour-mila { width: 84px; height: 84px; }
+.tour-title { font-size: 17px; font-weight: 700; }
+.tour-text { font-size: 14px; line-height: 1.5; color: #444; margin-top: 8px; }
+.tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.tour-card button { width: auto; margin: 0; border: none; cursor: pointer; font-weight: 700; font-size: 13px; border-radius: 10px; }
+.tour-skip { background: none; color: #888; padding: 8px 4px; white-space: nowrap; }
+.tour-skip:hover { color: #555; }
+.tour-nav { display: flex; gap: 6px; }
+.tour-back { background: #f3f4ff; color: #667eea; padding: 8px 12px; }
+.tour-next { background: #58cc02; color: #fff; padding: 8px 14px; box-shadow: 0 3px 0 #46a302; }
+.tour-dots { font-size: 12px; color: #999; font-weight: 600; white-space: nowrap; }
+.tour-card.center { animation: tourPopCenter 0.25s ease; }
+@keyframes tourPopCenter {
+  from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* ===== Interactive lessons (lesson-flow.js) ===== */
+.message.bot .sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* Word card */
+.message.bot.word-card {
+  border: 2px solid #e3e5ff;
+  background: linear-gradient(180deg, #ffffff, #f7f8ff);
+  min-width: 240px;
+  padding: 16px 18px;
+}
+.wc-top { display: flex; align-items: center; gap: 8px; }
+.wc-word { font-size: 26px; font-weight: 800; color: #1a1a1a; }
+.wc-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 4px; font-size: 14px; }
+.wc-pron { color: #764ba2; font-weight: 600; }
+.wc-pron::before { content: "["; } .wc-pron::after { content: "]"; }
+.wc-meaning { color: #333; font-weight: 600; }
+.wc-meaning::before { content: "= "; color: #999; }
+.wc-example { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dde; font-size: 14px; }
+.wc-example-tr { font-size: 13px; color: #888; }
+
+/* Quick check */
+.check-q { font-weight: 700; margin-bottom: 8px; }
+.check-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-opt {
+  border: 2px solid #e0e0e0; border-bottom-width: 4px; background: #fff;
+  border-radius: 12px; padding: 8px 14px; font-weight: 700; font-size: 15px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.check-opt:hover:not(:disabled) { border-color: #667eea; background: #f7f8ff; }
+.check-opt:disabled { cursor: default; }
+.check-opt.right { border-color: #58cc02; background: #e9f9d9; }
+.check-opt.wrong { border-color: #ff4b4b; background: #ffe5e5; }
+
+/* Pronunciation prompt */
+.message.bot.listening { animation: mila-listen 1s ease-in-out infinite; }
+@keyframes mila-listen { 50% { box-shadow: 0 0 0 5px rgba(255, 75, 75, 0.2); } }
+
+/* Reply buttons under Mila's messages */
+.reply-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px 46px; }
+.reply-chip {
+  border: 1.5px solid #d9dcff; background: #fff; color: #4b4f9e;
+  border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.reply-chip:hover { background: #f3f4ff; }
+.reply-chip.primary { background: #58cc02; border-color: #58cc02; color: #fff; }
+.reply-chip.primary:hover { background: #4fb802; }
+
+/* End-of-round checkpoint */
+.message.bot.checkpoint { border: 2px solid #ffd700; background: #fffbe6; padding: 16px 18px; }
+.cp-title { font-size: 18px; font-weight: 800; }
+.cp-sub { font-size: 14px; color: #555; margin-top: 2px; }
+.cp-words { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cp-words span { background: #fff; border: 1px solid #f0e3a0; border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; }
+.cp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cp-actions button { border: none; border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.cp-quiz { background: #58cc02; color: #fff; box-shadow: 0 3px 0 #46a302; }
+.cp-keep { background: #fff; color: #4b4f9e; border: 1.5px solid #d9dcff !important; }
+
+/* Round progress in the chat header */
+.round-progress { min-width: 150px; }
+.round-label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; white-space: nowrap; }
+.round-bar { height: 6px; background: #eceef7; border-radius: 999px; overflow: hidden; }
+.round-fill { height: 100%; width: 0; background: #58cc02; border-radius: 999px; transition: width 0.4s ease; }
+
+/* "Another example" card */
+.message.bot.example-card { border: 2px solid #e3e5ff; background: linear-gradient(180deg, #ffffff, #f7f8ff); padding: 14px 18px; }
+.ex-label { font-size: 11px; font-weight: 700; color: #764ba2; text-transform: uppercase; letter-spacing: 0.06em; }
+.ex-sentence { display: flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700; color: #1a1a1a; margin-top: 4px; }
+.ex-translation { font-size: 14px; color: #777; margin-top: 2px; }
+
+/* Mila reading a bubble aloud */
+.messages .message.bot.speaking {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.35), 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.2s ease;
+}
+.replay-btn {
+  display: inline-block; margin-top: 8px; border: none; background: #f3f4ff; color: #667eea;
+  border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.replay-btn:hover { background: #e9eaff; }
+
+/* "Now you try!" pronunciation step */
+.try-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.try-mic {
+  border: none; border-radius: 999px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer;
+  background: #ff4b4b; color: #fff; box-shadow: 0 3px 0 #ea2b2b;
+}
+.try-mic:active { transform: translateY(2px); box-shadow: 0 1px 0 #ea2b2b; }
+.try-skip { border: none; background: none; color: #888; font-weight: 600; cursor: pointer; padding: 6px; }
+.try-skip:hover { color: #555; }
+
+/* ===== Course map in the sidebar (lesson-flow.js) ===== */
+.course-title { margin: 6px 0 8px; }
+.course-level {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px; font-weight: 700; opacity: 0.95; margin: 10px 0 4px;
+}
+.course-level-count { font-size: 12px; font-weight: 600; opacity: 0.8; }
+.course-locked {
+  font-size: 12px; opacity: 0.75; margin: 10px 0 4px; padding: 8px 10px;
+  border: 1px dashed rgba(255,255,255,0.4); border-radius: 8px;
+}
+.sidebar button.course-topic {
+  display: block; text-align: left; margin: 5px 0; padding: 8px 10px;
+  background: rgba(255,255,255,0.14); color: #fff; border: 1.5px solid transparent;
+  transition: background 0.15s;
+}
+.sidebar button.course-topic:hover { background: rgba(255,255,255,0.24); }
+.sidebar button.course-topic.active { border-color: #ffd700; background: rgba(255,255,255,0.22); }
+.sidebar button.course-topic.done .ct-fill { background: #58cc02; }
+.ct-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ct-name { flex: 1; font-weight: 600; }
+.ct-count { font-size: 12px; opacity: 0.85; }
+.ct-bar { height: 4px; background: rgba(255,255,255,0.25); border-radius: 999px; margin-top: 6px; overflow: hidden; }
+.ct-fill { height: 100%; width: 0; background: #ffd700; border-radius: 999px; transition: width 0.4s ease; }
+
+/* Topic / level complete cards */
+.cp-badge { font-size: 40px; line-height: 1; margin-bottom: 6px; }
+.message.bot.checkpoint.level-done { border-color: #764ba2; background: #f6f0ff; }
+
+/* ===== Grammar: Mila's Colour Blocks method ===== */
+.block {
+  display: inline-block; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 15px;
+  color: #fff; background: #999; border-bottom: 3px solid rgba(0,0,0,0.18); line-height: 1.3;
+}
+.role-subject     { background: #1cb0f6; }
+.role-verb        { background: #ff4b4b; }
+.role-object      { background: #58cc02; }
+.role-adjective   { background: #a560e8; }
+.role-adverb      { background: #ff9600; }
+.role-article     { background: #7c8db5; }
+.role-pronoun     { background: #2b70c9; }
+.role-preposition { background: #00a6a0; }
+.role-place       { background: #e2a400; }
+.role-time        { background: #c98a00; }
+.role-question    { background: #ff6fae; }
+.role-negation    { background: #8b1a1a; }
+.role-connector   { background: #8d6e63; }
+.role-other       { background: #9e9e9e; }
+
+.blocks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.blocks .plus { font-weight: 800; color: #999; }
+.message.bot.grammar-card { min-width: 300px; }
+.g-title { font-size: 22px; font-weight: 800; color: #1a1a1a; }
+.g-explain { font-size: 14px; color: #444; margin-top: 6px; line-height: 1.55; }
+.g-label { font-size: 11px; font-weight: 700; color: #764ba2; text-transform: uppercase; letter-spacing: 0.06em; margin: 14px 0 6px; }
+.g-compare { background: #fff; border: 1px solid #e6e8f5; border-radius: 12px; padding: 10px 12px; }
+.g-cmp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 3px 0; }
+.g-cmp-lang { font-size: 11px; font-weight: 700; color: #fff; background: #667eea; border-radius: 6px; padding: 2px 7px; }
+.g-cmp-row + .g-cmp-row .g-cmp-lang { background: #9aa0c3; }
+.g-cmp-text { font-size: 15px; font-weight: 600; }
+.g-cmp-note { font-size: 13px; color: #555; margin-top: 6px; }
+.g-example { margin-bottom: 8px; }
+.g-translation { font-size: 13px; color: #888; margin-top: 3px; }
+.g-legend { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #dde; }
+.g-legend .block { font-size: 11px; padding: 2px 7px; border-bottom-width: 2px; }
+
+/* Sentence builder */
+.message.bot.builder { border: 2px solid #e3e5ff; min-width: 300px; }
+.b-title { font-weight: 800; font-size: 16px; }
+.b-translation { font-size: 15px; font-weight: 600; color: #333; margin-top: 4px; }
+.b-answer {
+  min-height: 46px; margin-top: 10px; padding: 8px; border-radius: 12px;
+  border: 2px dashed #cfd3f0; background: #fafbff;
+}
+.b-answer.right { border-style: solid; border-color: #58cc02; background: #effbe6; }
+.b-answer.wrong { border-style: solid; border-color: #ff4b4b; background: #ffeded; }
+.b-bank { margin-top: 10px; min-height: 36px; }
+.block.tile { cursor: pointer; transition: transform 0.1s; }
+.block.tile:hover { transform: translateY(-2px); }
+.builder.done .block.tile { cursor: default; transform: none; }
+.b-actions { display: flex; gap: 8px; margin-top: 12px; }
+.b-check { border: none; border-radius: 10px; padding: 8px 16px; font-weight: 700; color: #fff; background: #58cc02; box-shadow: 0 3px 0 #46a302; cursor: pointer; }
+.b-check:disabled { background: #cfd3e0; box-shadow: none; cursor: default; }
+.b-reset { border: none; background: none; color: #888; font-weight: 600; cursor: pointer; }
+
+/* Step-by-step grammar lessons */
+.reveal { animation: g-reveal 0.35s ease; }
+@keyframes g-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.grammar-card .speaking, .grammar-card .reveal.speaking { border-radius: 10px; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3); }
+.g-point { padding: 8px 10px; margin: 6px 0; background: #fff; border: 1px solid #eceef8; border-radius: 10px; }
+.g-point-head { font-weight: 800; color: #4b4f9e; margin-right: 6px; }
+.g-point-text { color: #333; }
+.g-point-ex { margin-top: 4px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
+.g-note { font-size: 13px; color: #555; margin-top: 4px; }
+.g-example { padding: 8px 10px; margin: 6px 0; background: #fff; border: 1px solid #eceef8; border-radius: 10px; }
+.g-tip { margin-top: 12px; padding: 10px 12px; background: #fffbe6; border: 1px solid #f3e3a0; border-radius: 10px; font-size: 14px; }

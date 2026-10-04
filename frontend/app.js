@@ -53,49 +53,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   };
 }
 
-// NEW FUNCTION: Speak individual words from inline speaker buttons
+// Speak individual words from inline speaker buttons — in Mila's voice
 function speakWord(element) {
   const word = element.getAttribute('data-word');
-  const lang = element.getAttribute('data-lang');
-  
-  console.log('🔊 Inline speaker clicked:', word, 'Language:', lang);
-  
-  if (!('speechSynthesis' in window)) {
-    alert('Text-to-speech is not supported in your browser.');
-    return;
-  }
-  
-  speechSynthesis.cancel();
-  
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = lang === 'ru' ? 'ru-RU' : 'en-US';
-  utterance.rate = 0.7;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-  
-  // Select appropriate voice
-  const voices = speechSynthesis.getVoices();
-  const targetVoice = voices.find(v => v.lang.startsWith(lang));
-  if (targetVoice) {
-    utterance.voice = targetVoice;
-  }
-  
-  // Visual feedback - change icon temporarily
-  const originalIcon = element.textContent;
-  element.textContent = '🔊';
-  element.style.color = '#ff6b6b';
-  
-  utterance.onend = () => {
-    element.textContent = originalIcon;
-    element.style.color = '#28a745';
-  };
-  
-  utterance.onerror = () => {
-    element.textContent = originalIcon;
-    element.style.color = '#28a745';
-  };
-  
-  speechSynthesis.speak(utterance);
+  element.classList.add('speaking');
+  Mila.voice.speak(word, { force: true }).finally(() => element.classList.remove('speaking'));
 }
 
 // Toggle voice input
@@ -136,140 +98,64 @@ function toggleVoiceInput() {
   }
 }
 
-// Text-to-speech for last bot message
-function speakLastMessage() {
-  console.log('🔊 Speaker button clicked!');
-  console.log('lastBotMessage:', lastBotMessage);
-  console.log('speechSynthesis available:', 'speechSynthesis' in window);
-  
-  if (!lastBotMessage) {
-    console.log('❌ No last message');
-    return; // Silently do nothing if no message
-  }
+// What Mila should say aloud for a message: the [SPEAK:...] marker, else the first bold
+// (or, failing that, quoted) word/phrase in the language being learned
+function milaSpeechFor(message) {
+  const card = window.MilaLesson?.parseCard(message);
+  if (card) return card.word;
 
-  if (!('speechSynthesis' in window)) {
-    console.log('❌ speechSynthesis not supported');
-    alert('Text-to-speech is not supported in your browser. Try Chrome or Edge.');
-    return;
-  }
+  const speakMarker = message.match(/\[SPEAK:(.*?)\]/);
+  if (speakMarker && speakMarker[1]) return speakMarker[1].trim();
 
-  let textToSpeak = '';
-  
-  // First, check for [SPEAK:...] marker
-  const speakMarker = lastBotMessage.match(/\[SPEAK:(.*?)\]/);
-  if (speakMarker && speakMarker[1]) {
-    textToSpeak = speakMarker[1].trim();
-    console.log('Found SPEAK marker:', textToSpeak);
-  } else {
-    // Fallback: Extract text based on language mode
-    if (currentMode === 'ru-en') {
-      // Learning English - extract English words/phrases in bold
-      const englishRegex = /\*\*([A-Za-z\s,.'!?-]+)\*\*/;
-      const match = lastBotMessage.match(englishRegex);
-      textToSpeak = match ? match[1].trim() : '';
-    } else {
-      // Learning Russian - extract Cyrillic text in bold
-      // This regex captures Russian words, including punctuation
-      const cyrillicRegex = /\*\*([А-Яа-яЁё\s,.'!?-]+)\*\*/;
-      const match = lastBotMessage.match(cyrillicRegex);
-      textToSpeak = match ? match[1].trim() : '';
-    }
-  }
-  
-  if (!textToSpeak) {
-    console.log('❌ No text to speak - no bold words found');
-    return; // Don't speak anything if no bold text found
-  }
-
-  console.log('Speaking:', textToSpeak);
-  console.log('Current mode:', currentMode);
-
-  // Cancel any ongoing speech
-  speechSynthesis.cancel();
-  console.log('Previous speech cancelled');
-
-  // Wait for voices to load (they load async on some browsers)
-  function speak() {
-    console.log('📢 Creating utterance...');
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    
-    // Set language based on mode
-    // In ru-en mode: learning English, so speak English
-    // In en-ru mode: learning Russian, so speak Russian
-    const targetLang = currentMode === 'ru-en' ? 'en-US' : 'ru-RU';
-    utterance.lang = targetLang;
-    utterance.rate = 0.7;
-    utterance.pitch = 1;
-    
-    console.log('Target language:', targetLang);
-    console.log('Available voices:', speechSynthesis.getVoices().length);
-
-    // Try to select appropriate voice
-    const voices = speechSynthesis.getVoices();
-    const targetVoice = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
-    if (targetVoice) {
-      utterance.voice = targetVoice;
-      console.log('Using voice:', targetVoice.name, 'for language:', targetLang);
-    } else {
-      console.warn(`No ${targetLang} voice found, using default`);
-    }
-
-    // Visual feedback
-    if (listenBtn) {
-      listenBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
-      listenBtn.textContent = '⏸️';
-    }
-
-    utterance.onstart = () => console.log('✅ Speech started!');
-    
-    utterance.onend = () => {
-      console.log('✅ Speech ended');
-      if (listenBtn) {
-        listenBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-        listenBtn.textContent = '🔊';
-      }
-    };
-
-    utterance.onerror = (e) => {
-      console.error('❌ TTS error:', e);
-      console.error('Error type:', e.error);
-      if (listenBtn) {
-        listenBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-        listenBtn.textContent = '🔊';
-      }
-      if (e.error === 'not-allowed') {
-        alert('Speech blocked by browser. Click the speaker icon again after dismissing this alert.');
-      } else {
-        alert('Speech error: ' + e.error);
-      }
-    };
-
-    console.log('🎤 Calling speechSynthesis.speak()...');
-    speechSynthesis.speak(utterance);
-    console.log('Speak command executed');
-  }
-
-  // If voices are already loaded, speak immediately
-  if (speechSynthesis.getVoices().length > 0) {
-    speak();
-  } else {
-    // Wait for voices to load
-    console.log('Waiting for voices to load...');
-    speechSynthesis.addEventListener('voiceschanged', function onVoices() {
-      console.log('Voices loaded:', speechSynthesis.getVoices().length);
-      speechSynthesis.removeEventListener('voiceschanged', onVoices);
-      speak();
-    }, { once: true });
-    
-    // Fallback timeout in case voiceschanged never fires
-    setTimeout(() => {
-      if (speechSynthesis.getVoices().length === 0) {
-        console.warn('Voices still not loaded after 2s, trying anyway...');
-      }
-      speak();
-    }, 2000);
-  }
+  const bold = currentMode === 'ru-en'
+    ? /\*\*([A-Za-z\s,.'!?-]+)\*\*/
+    : /\*\*([А-Яа-яЁё\s,.'!?-]+)\*\*/;
+  const quoted = currentMode === 'ru-en'
+    ? /["«“]([A-Za-z][A-Za-z\s,.'!?-]{0,80})["»”]/
+    : /["«“]([А-Яа-яЁё][А-Яа-яЁё\s,.'!?-]{0,80})["»”]/;
+  // Last resort: the first run of words in the language being learned
+  const plain = currentMode === 'ru-en'
+    ? /([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*){0,5})/
+    : /([А-Яа-яЁё][А-Яа-яЁё-]*(?:[\s,]+[А-Яа-яЁё][А-Яа-яЁё-]*){0,7}[!?]?)/;
+  const match = message.match(bold) || message.match(quoted) || message.match(plain);
+  return match ? match[1].trim() : '';
 }
+
+// Speaker button: Mila reads the last word she taught
+function speakLastMessage() {
+  const text = lastBotMessage ? milaSpeechFor(lastBotMessage) : '';
+  if (!text) return;
+  if (listenBtn) listenBtn.textContent = '⏸️';
+  Mila.voice.speak(text, { force: true }).finally(() => {
+    if (listenBtn) listenBtn.textContent = '🔊';
+  });
+}
+
+// Mila's header: status line + mute toggle
+const milaStatus = document.getElementById('milaStatus');
+const milaMuteBtn = document.getElementById('milaMuteBtn');
+
+function setMilaStatus(kind) {
+  if (!milaStatus) return;
+  const labels = currentMode === 'ru-en'
+    ? { online: 'в сети', typing: 'печатает…', speaking: 'говорит…' }
+    : { online: 'online', typing: 'typing…', speaking: 'speaking…' };
+  milaStatus.textContent = labels[kind] || labels.online;
+}
+
+function updateMilaMuteUI() {
+  if (!milaMuteBtn) return;
+  milaMuteBtn.textContent = Mila.voice.muted ? '🔇' : '🔈';
+  milaMuteBtn.title = Mila.voice.muted ? "Turn Mila's voice on" : 'Mute Mila';
+}
+
+Mila.onTalking(on => setMilaStatus(on ? 'speaking' : 'online'));
+milaMuteBtn?.addEventListener('click', () => {
+  Mila.voice.setMuted(!Mila.voice.muted);
+  updateMilaMuteUI();
+});
+setMilaStatus('online');
+updateMilaMuteUI();
 
 // Welcome message is now handled by welcome.js popup
 
@@ -279,8 +165,11 @@ const BOT_LABELS = ['meaning','pronunciation','usage','example','translation',
   'note','grammar','tip','formal','informal','definition'];
 
 function botHTML(text) {
+  // Word/example cards (always last) are rendered separately by lesson-flow.js — hide
+  // them, including while they are still streaming in
+  let t = text.replace(/\[\[(WORD|EXAMPLE|GRAMMAR|BUILD)[\s\S]*$/, '').trimEnd();
   // Strip TTS markers
-  let t = text.replace(/\[SPEAK:[^\]]+\]/g, '');
+  t = t.replace(/\[SPEAK:[^\]]+\]/g, '');
   // Strip ### headings
   t = t.replace(/^#{1,3}\s+/gm, '');
 
@@ -324,11 +213,31 @@ function addMessage(text, sender) {
   return div;
 }
 
-async function sendMessage() {
-  const text = input.value.trim();
+// textOverride/intent/topic: message sent by a button
+// (intent: next | example | explain; topic: a course topic picked in the sidebar)
+async function sendMessage(textOverride, intent, topic) {
+  const fromButton = typeof textOverride === "string";
+  const text = (fromButton ? textOverride : input.value).trim();
   if (!text) return;
-  input.value = "";
+  if (!fromButton) input.value = "";
+  Mila.voice.stop();  // never talk over the student
+  window.MilaLesson?.interrupt();
+  window.MilaLesson?.clearReplies();
   addMessage(text, "user");
+
+  // Mila is "typing" until her reply starts streaming in
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "message bot typing";
+  typingDiv.innerHTML = "<span></span><span></span><span></span>";
+  messages.appendChild(typingDiv);
+  messages.scrollTop = messages.scrollHeight;
+  setMilaStatus('typing');
+  Mila.setMood('thinking');
+  const stopTyping = () => {
+    typingDiv.remove();
+    setMilaStatus('online');
+    Mila.setMood('idle');
+  };
 
   try {
     const response = await fetch("/chat/stream", {
@@ -337,11 +246,14 @@ async function sendMessage() {
       body: JSON.stringify({
         message: text,
         language_mode: currentMode,
-        difficulty: localStorage.getItem('difficulty') || 'beginner'
+        difficulty: localStorage.getItem('difficulty') || 'beginner',
+        intent: intent || null,
+        topic: topic || null
       })
     });
 
     if (!response.ok) {
+      stopTyping();
       if (response.status === 401) {
         addMessage("Session expired. Please login again.", "bot");
         setTimeout(() => { window.location.reload(); }, 2000);
@@ -378,6 +290,7 @@ async function sendMessage() {
             const data = JSON.parse(eventData);
             botMessage += data.text;
             if (!botDiv) {
+              stopTyping();
               botDiv = document.createElement("div");
               botDiv.className = "message bot";
               messages.appendChild(botDiv);
@@ -396,6 +309,8 @@ async function sendMessage() {
               if (botDiv) botDiv.innerHTML = botHTML(botMessage);
             }
             lastBotMessage = botMessage;
+            // Word card → quick check → reply buttons (lesson-flow.js); Mila says the word
+            window.MilaLesson.onReply(botMessage, botDiv, data.course);
             if (data.progress) updateProgress(data.progress);
             if (data.quiz_ready && data.quiz) {
               quizData = data.quiz; quizIndex = 0; showQuiz();
@@ -406,6 +321,7 @@ async function sendMessage() {
     }
   } catch (error) {
     console.error('Chat error:', error);
+    stopTyping();
     addMessage('Sorry, there was an error. Please try again.', 'bot');
   }
 }
@@ -490,35 +406,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     console.error('Failed to load word count:', e);
   }
 });
-
-function startLesson(id) {
-  const lessonMessages = {
-    'a1_greetings': 'teach me greetings',
-    'a1_travel':    'teach me travel',
-    'a2_food':      'teach me food'
-  };
-
-  // Include difficulty in the message
-  const difficulty = localStorage.getItem('difficulty') || 'beginner';
-  input.value = `${lessonMessages[id] || 'teach me greetings'} at ${difficulty} level`;
-  sendMessage();
-
-  // Show stop lesson button
-  const stopBtn = document.getElementById('stopLessonBtn');
-  if (stopBtn) {
-    stopBtn.classList.remove('hidden');
-  }
-}
-
-function stopLesson() {
-  addMessage("Feel free to ask me anything else!", "bot");
-
-  // Hide stop lesson button
-  const stopBtn = document.getElementById('stopLessonBtn');
-  if (stopBtn) {
-    stopBtn.classList.add('hidden');
-  }
-}
 
 function showQuiz() {
   quizBox.classList.remove("hidden");
@@ -643,6 +530,7 @@ window.toggleLanguage = function() {
   }
   
   localStorage.setItem('languageMode', currentMode);
+  window.MilaLesson?.renderRound();
   
   // Update entire UI language
   if (typeof updateUILanguage === 'function') {
@@ -902,7 +790,9 @@ window.submitOnboarding = async function submitOnboarding() {
     console.log('✅ Sidebar avatar updated:', selectedOnboardingAvatar);
   }
 
-  return window.checkRecap();
+  await window.checkRecap();
+  // Brand-new user: Mila shows them around the site
+  window.MilaTour?.startIfNew();
 };
 
 window.checkRecap = async function checkRecap() {
@@ -999,7 +889,7 @@ function renderRecapQuestion() {
   const total = _recapQuestions.length;
 
   const html = `
-    <div class="recap-mascot">🦉</div>
+    <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <h2 style="margin:0;color:white;">Quick Recap</h2>
@@ -1035,7 +925,7 @@ function renderRecapFeedback() {
     if (_recapQuestions[i] && _recapAnswers[i] === _recapQuestions[i].answer) correct++;
   }
 
-  const mascotEmoji = correct === _recapAnswers.length ? '🎉' : correct >= _recapAnswers.length / 2 ? '😊' : '🦉';
+  const mascotEmoji = correct === _recapAnswers.length ? '🎉' : correct >= _recapAnswers.length / 2 ? '😊' : '<img class="mila-img" src="/static/mila.svg" alt="Mila">';
 
   const html = `
     <div class="recap-mascot">${mascotEmoji}</div>

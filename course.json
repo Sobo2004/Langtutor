@@ -1,0 +1,342 @@
+{
+  "_about": "LangTutor course. Vocabulary items have the Russian and the English: English speakers learn the 'ru' text, Russian speakers learn the 'en' text. Grammar items (levels with kind=grammar) have a title and a focus for each direction (ru-en: English grammar for Russian speakers, en-ru: Russian grammar for English speakers). Rounds are 5 items. Edit freely: keep 'id' values stable once users have progress.",
+  "levels": [
+    {
+      "id": "a1",
+      "name": { "en": "Beginner (A1)", "ru": "Начальный (A1)" },
+      "style": "beginner",
+      "topics": [
+        {
+          "id": "greetings", "emoji": "👋",
+          "name": { "en": "Greetings", "ru": "Приветствия" },
+          "items": [
+            { "ru": "Привет", "en": "Hi" },
+            { "ru": "Здравствуйте", "en": "Hello" },
+            { "ru": "Доброе утро", "en": "Good morning" },
+            { "ru": "Добрый день", "en": "Good afternoon" },
+            { "ru": "Добрый вечер", "en": "Good evening" },
+            { "ru": "Как дела?", "en": "How are you?" },
+            { "ru": "Хорошо", "en": "Good" },
+            { "ru": "Спасибо", "en": "Thank you" },
+            { "ru": "Пожалуйста", "en": "Please" },
+            { "ru": "Да", "en": "Yes" },
+            { "ru": "Нет", "en": "No" },
+            { "ru": "Меня зовут…", "en": "My name is…" },
+            { "ru": "Очень приятно", "en": "Nice to meet you" },
+            { "ru": "Пока", "en": "Bye" },
+            { "ru": "До свидания", "en": "Goodbye" }
+          ]
+        },
+        {
+          "id": "numbers", "emoji": "🔢",
+          "name": { "en": "Numbers", "ru": "Числа" },
+          "items": [
+            { "ru": "Один", "en": "One" },
+            { "ru": "Два", "en": "Two" },
+            { "ru": "Три", "en": "Three" },
+            { "ru": "Четыре", "en": "Four" },
+            { "ru": "Пять", "en": "Five" },
+            { "ru": "Шесть", "en": "Six" },
+            { "ru": "Семь", "en": "Seven" },
+            { "ru": "Восемь", "en": "Eight" },
+            { "ru": "Девять", "en": "Nine" },
+            { "ru": "Десять", "en": "Ten" },
+            { "ru": "Ноль", "en": "Zero" },
+            { "ru": "Двадцать", "en": "Twenty" },
+            { "ru": "Сто", "en": "One hundred" },
+            { "ru": "Первый", "en": "First" },
+            { "ru": "Сколько?", "en": "How many?" }
+          ]
+        },
+        {
+          "id": "family", "emoji": "👨‍👩‍👧",
+          "name": { "en": "Family", "ru": "Семья" },
+          "items": [
+            { "ru": "Семья", "en": "Family" },
+            { "ru": "Мама", "en": "Mom" },
+            { "ru": "Папа", "en": "Dad" },
+            { "ru": "Брат", "en": "Brother" },
+            { "ru": "Сестра", "en": "Sister" },
+            { "ru": "Сын", "en": "Son" },
+            { "ru": "Дочь", "en": "Daughter" },
+            { "ru": "Бабушка", "en": "Grandmother" },
+            { "ru": "Дедушка", "en": "Grandfather" },
+            { "ru": "Муж", "en": "Husband" },
+            { "ru": "Жена", "en": "Wife" },
+            { "ru": "Ребёнок", "en": "Child" },
+            { "ru": "Друг", "en": "Friend" },
+            { "ru": "Это моя мама", "en": "This is my mom" },
+            { "ru": "У меня есть брат", "en": "I have a brother" }
+          ]
+        },
+        {
+          "id": "food", "emoji": "🍽",
+          "name": { "en": "Food", "ru": "Еда" },
+          "items": [
+            { "ru": "Вода", "en": "Water" },
+            { "ru": "Хлеб", "en": "Bread" },
+            { "ru": "Чай", "en": "Tea" },
+            { "ru": "Кофе", "en": "Coffee" },
+            { "ru": "Молоко", "en": "Milk" },
+            { "ru": "Яблоко", "en": "Apple" },
+            { "ru": "Суп", "en": "Soup" },
+            { "ru": "Мясо", "en": "Meat" },
+            { "ru": "Рыба", "en": "Fish" },
+            { "ru": "Сыр", "en": "Cheese" },
+            { "ru": "Вкусно!", "en": "Delicious!" },
+            { "ru": "Я хочу есть", "en": "I'm hungry" },
+            { "ru": "Меню, пожалуйста", "en": "The menu, please" },
+            { "ru": "Счёт, пожалуйста", "en": "The bill, please" },
+            { "ru": "Приятного аппетита!", "en": "Enjoy your meal!" }
+          ]
+        },
+        {
+          "id": "travel", "emoji": "🧳",
+          "name": { "en": "Travel", "ru": "Путешествия" },
+          "items": [
+            { "ru": "Где?", "en": "Where?" },
+            { "ru": "Вокзал", "en": "Train station" },
+            { "ru": "Аэропорт", "en": "Airport" },
+            { "ru": "Автобус", "en": "Bus" },
+            { "ru": "Метро", "en": "Metro" },
+            { "ru": "Такси", "en": "Taxi" },
+            { "ru": "Билет", "en": "Ticket" },
+            { "ru": "Гостиница", "en": "Hotel" },
+            { "ru": "Улица", "en": "Street" },
+            { "ru": "Направо", "en": "To the right" },
+            { "ru": "Налево", "en": "To the left" },
+            { "ru": "Прямо", "en": "Straight ahead" },
+            { "ru": "Где туалет?", "en": "Where is the toilet?" },
+            { "ru": "Как пройти к…?", "en": "How do I get to…?" },
+            { "ru": "Я заблудился", "en": "I'm lost" }
+          ]
+        },
+        {
+          "id": "shopping", "emoji": "🛍",
+          "name": { "en": "Shopping", "ru": "Покупки" },
+          "items": [
+            { "ru": "Магазин", "en": "Shop" },
+            { "ru": "Деньги", "en": "Money" },
+            { "ru": "Сколько стоит?", "en": "How much does it cost?" },
+            { "ru": "Дорого", "en": "Expensive" },
+            { "ru": "Дёшево", "en": "Cheap" },
+            { "ru": "Рубль", "en": "Rouble" },
+            { "ru": "Карта", "en": "Card" },
+            { "ru": "Наличные", "en": "Cash" },
+            { "ru": "Пакет", "en": "Bag" },
+            { "ru": "Я возьму это", "en": "I'll take this" },
+            { "ru": "Можно посмотреть?", "en": "May I have a look?" },
+            { "ru": "Размер", "en": "Size" },
+            { "ru": "Касса", "en": "Checkout" },
+            { "ru": "Скидка", "en": "Discount" },
+            { "ru": "Это всё", "en": "That's all" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2",
+      "name": { "en": "Intermediate (A2)", "ru": "Средний (A2)" },
+      "style": "intermediate",
+      "topics": [
+        {
+          "id": "small_talk", "emoji": "💬",
+          "name": { "en": "Getting to know people", "ru": "Знакомство" },
+          "items": [
+            { "ru": "Откуда вы?", "en": "Where are you from?" },
+            { "ru": "Я из Англии", "en": "I'm from England" },
+            { "ru": "Чем вы занимаетесь?", "en": "What do you do?" },
+            { "ru": "Я работаю учителем", "en": "I work as a teacher" },
+            { "ru": "Сколько вам лет?", "en": "How old are you?" },
+            { "ru": "Мне двадцать пять лет", "en": "I'm twenty-five" },
+            { "ru": "Где вы живёте?", "en": "Where do you live?" },
+            { "ru": "Я живу в Лондоне", "en": "I live in London" },
+            { "ru": "Вы говорите по-английски?", "en": "Do you speak English?" },
+            { "ru": "Я немного говорю по-русски", "en": "I speak a little Russian" },
+            { "ru": "Повторите, пожалуйста", "en": "Please repeat that" },
+            { "ru": "Говорите медленнее, пожалуйста", "en": "Please speak more slowly" },
+            { "ru": "Я не понимаю", "en": "I don't understand" },
+            { "ru": "Как это сказать?", "en": "How do you say this?" },
+            { "ru": "Рад познакомиться", "en": "Glad to meet you" }
+          ]
+        },
+        {
+          "id": "daily_life", "emoji": "⏰",
+          "name": { "en": "Daily life & time", "ru": "Распорядок дня" },
+          "items": [
+            { "ru": "Я встаю в семь", "en": "I get up at seven" },
+            { "ru": "Я завтракаю", "en": "I'm having breakfast" },
+            { "ru": "Я иду на работу", "en": "I'm going to work" },
+            { "ru": "Сколько сейчас времени?", "en": "What time is it?" },
+            { "ru": "Сейчас три часа", "en": "It's three o'clock" },
+            { "ru": "Утром", "en": "In the morning" },
+            { "ru": "Вечером", "en": "In the evening" },
+            { "ru": "Сегодня", "en": "Today" },
+            { "ru": "Завтра", "en": "Tomorrow" },
+            { "ru": "Вчера", "en": "Yesterday" },
+            { "ru": "Я устал", "en": "I'm tired" },
+            { "ru": "Я занят", "en": "I'm busy" },
+            { "ru": "У меня есть время", "en": "I have time" },
+            { "ru": "Я ложусь спать", "en": "I'm going to bed" },
+            { "ru": "Каждый день", "en": "Every day" }
+          ]
+        },
+        {
+          "id": "restaurant", "emoji": "🍷",
+          "name": { "en": "At a restaurant", "ru": "В ресторане" },
+          "items": [
+            { "ru": "Столик на двоих, пожалуйста", "en": "A table for two, please" },
+            { "ru": "Что вы порекомендуете?", "en": "What do you recommend?" },
+            { "ru": "Я буду суп", "en": "I'll have the soup" },
+            { "ru": "Мне, пожалуйста, чай", "en": "Tea for me, please" },
+            { "ru": "Без сахара", "en": "Without sugar" },
+            { "ru": "Я вегетарианец", "en": "I'm vegetarian" },
+            { "ru": "У меня аллергия на орехи", "en": "I'm allergic to nuts" },
+            { "ru": "Это очень вкусно", "en": "This is very tasty" },
+            { "ru": "Можно ещё воды?", "en": "Could I have more water?" },
+            { "ru": "Можно оплатить картой?", "en": "Can I pay by card?" },
+            { "ru": "Сдачи не надо", "en": "Keep the change" },
+            { "ru": "Я заказывал другое", "en": "I ordered something else" },
+            { "ru": "Где мой заказ?", "en": "Where is my order?" },
+            { "ru": "Всё было отлично", "en": "Everything was great" },
+            { "ru": "Ещё что-нибудь?", "en": "Anything else?" }
+          ]
+        },
+        {
+          "id": "getting_around", "emoji": "🚆",
+          "name": { "en": "Getting around", "ru": "Как добраться" },
+          "items": [
+            { "ru": "Как доехать до центра?", "en": "How do I get to the centre?" },
+            { "ru": "Это далеко?", "en": "Is it far?" },
+            { "ru": "Это недалеко", "en": "It's not far" },
+            { "ru": "Остановите здесь, пожалуйста", "en": "Stop here, please" },
+            { "ru": "Когда отправляется поезд?", "en": "When does the train leave?" },
+            { "ru": "Один билет до Москвы", "en": "One ticket to Moscow" },
+            { "ru": "Туда и обратно", "en": "Return ticket" },
+            { "ru": "На какой остановке выходить?", "en": "Which stop do I get off at?" },
+            { "ru": "Мне нужна пересадка?", "en": "Do I need to change trains?" },
+            { "ru": "Поезд опаздывает", "en": "The train is late" },
+            { "ru": "Где ближайшая станция метро?", "en": "Where is the nearest metro station?" },
+            { "ru": "Я забронировал номер", "en": "I booked a room" },
+            { "ru": "Во сколько завтрак?", "en": "What time is breakfast?" },
+            { "ru": "Поверните за угол", "en": "Turn the corner" },
+            { "ru": "Идите прямо до светофора", "en": "Go straight to the traffic lights" }
+          ]
+        },
+        {
+          "id": "shopping_money", "emoji": "💳",
+          "name": { "en": "Shopping & money", "ru": "Покупки и деньги" },
+          "items": [
+            { "ru": "Я просто смотрю", "en": "I'm just looking" },
+            { "ru": "Можно примерить?", "en": "Can I try it on?" },
+            { "ru": "Где примерочная?", "en": "Where is the fitting room?" },
+            { "ru": "Есть размер побольше?", "en": "Do you have a bigger size?" },
+            { "ru": "Есть другой цвет?", "en": "Do you have another colour?" },
+            { "ru": "Это слишком дорого", "en": "This is too expensive" },
+            { "ru": "Можно дешевле?", "en": "Can you make it cheaper?" },
+            { "ru": "Я заплачу наличными", "en": "I'll pay in cash" },
+            { "ru": "Дайте, пожалуйста, чек", "en": "Can I have the receipt, please?" },
+            { "ru": "Можно вернуть?", "en": "Can I return it?" },
+            { "ru": "Мне нужен подарок", "en": "I need a gift" },
+            { "ru": "Это мне подходит", "en": "This suits me" },
+            { "ru": "Где банкомат?", "en": "Where is the cash machine?" },
+            { "ru": "Пакет нужен?", "en": "Do you need a bag?" },
+            { "ru": "Магазин работает до восьми", "en": "The shop is open until eight" }
+          ]
+        },
+        {
+          "id": "health_feelings", "emoji": "🩺",
+          "name": { "en": "Health & feelings", "ru": "Здоровье и чувства" },
+          "items": [
+            { "ru": "Мне плохо", "en": "I feel unwell" },
+            { "ru": "У меня болит голова", "en": "I have a headache" },
+            { "ru": "Мне нужен врач", "en": "I need a doctor" },
+            { "ru": "Где аптека?", "en": "Where is the pharmacy?" },
+            { "ru": "Вызовите скорую!", "en": "Call an ambulance!" },
+            { "ru": "Я простудился", "en": "I've caught a cold" },
+            { "ru": "У меня температура", "en": "I have a fever" },
+            { "ru": "Как вы себя чувствуете?", "en": "How are you feeling?" },
+            { "ru": "Мне лучше", "en": "I feel better" },
+            { "ru": "Я рад", "en": "I'm glad" },
+            { "ru": "Мне грустно", "en": "I'm sad" },
+            { "ru": "Я волнуюсь", "en": "I'm worried" },
+            { "ru": "Не волнуйтесь", "en": "Don't worry" },
+            { "ru": "Помогите!", "en": "Help!" },
+            { "ru": "Всё будет хорошо", "en": "Everything will be fine" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b1",
+      "name": { "en": "Advanced (B1)", "ru": "Продвинутый (B1)" },
+      "style": "advanced",
+      "kind": "grammar",
+      "topics": [
+        {
+          "id": "parts_of_speech", "emoji": "🧩",
+          "name": { "en": "Parts of speech", "ru": "Части речи" },
+          "items": [
+            { "title": { "en": "Nouns", "ru": "Существительные" },
+              "focus": { "ru-en": "English nouns compared with Russian: no grammatical gender and no case endings in English; plurals usually add -s; the articles a/an/the come before nouns (Russian has no articles).",
+                         "en-ru": "Russian nouns compared with English: every noun has a gender (masculine, feminine, neuter) shown by its ending; nouns change their endings for six cases; there are no articles." } },
+            { "title": { "en": "Verbs", "ru": "Глаголы" },
+              "focus": { "ru-en": "English verbs compared with Russian: English barely changes the verb (only -s for he/she/it) and uses helper verbs (do, be, have, will) and fixed tenses, while Russian changes the ending for every person.",
+                         "en-ru": "Russian verbs compared with English: the ending changes for every person (я читаю, ты читаешь, он читает); aspect (perfective/imperfective) replaces many English tenses; no helper verb like 'do'." } },
+            { "title": { "en": "Adjectives", "ru": "Прилагательные" },
+              "focus": { "ru-en": "English adjectives never change form (a big house, big houses) and always come before the noun; Russian adjectives agree with the noun in gender, number and case.",
+                         "en-ru": "Russian adjectives agree with their noun in gender, number and case (новый дом, новая машина, новое окно); English adjectives never change." } },
+            { "title": { "en": "Adverbs", "ru": "Наречия" },
+              "focus": { "ru-en": "English adverbs often end in -ly (quickly, slowly) and usually go after the verb or at the end of the sentence; compare with Russian adverbs in -о (быстро).",
+                         "en-ru": "Russian adverbs are often made from adjectives with -о (быстро, хорошо, медленно) and usually go before the verb; compare with English -ly." } },
+            { "title": { "en": "Pronouns & prepositions", "ru": "Местоимения и предлоги" },
+              "focus": { "ru-en": "English pronouns change only a little (I/me, he/him, they/them); prepositions (in, on, at, to) carry meaning that Russian often shows with case endings.",
+                         "en-ru": "Russian pronouns change for case (я, меня, мне, мной); each preposition (в, на, с, у) needs a particular case on the noun after it." } }
+          ]
+        },
+        {
+          "id": "sentence_structure", "emoji": "🏗",
+          "name": { "en": "Sentence structure", "ru": "Структура предложения" },
+          "items": [
+            { "title": { "en": "Word order", "ru": "Порядок слов" },
+              "focus": { "ru-en": "English word order is fixed: Subject + Verb + Object, because English has no case endings to show who does what; Russian word order is flexible.",
+                         "en-ru": "Russian word order is flexible because case endings show who does what; the neutral order is Subject + Verb + Object, and moving words changes the emphasis." } },
+            { "title": { "en": "The verb \"to be\"", "ru": "Глагол «быть»" },
+              "focus": { "ru-en": "English always needs am/is/are in the present (I am a student, She is happy); Russian leaves it out (Я студент).",
+                         "en-ru": "Russian leaves out 'to be' in the present (Я студент = I am a student) but uses был/была/было/были in the past and буду in the future." } },
+            { "title": { "en": "Asking questions", "ru": "Вопросы" },
+              "focus": { "ru-en": "English questions change word order and need a helper verb (Do you like tea? Is he at home?); Russian questions often keep the same words and use rising intonation.",
+                         "en-ru": "Russian yes/no questions keep normal word order and use rising intonation (Ты любишь чай?); question words go first (Где ты живёшь?); there is no 'do'." } },
+            { "title": { "en": "Negation", "ru": "Отрицание" },
+              "focus": { "ru-en": "English negation uses don't/doesn't/didn't, or not after be (I don't know, She isn't here), and only one negative per sentence; Russian uses не and allows double negatives (Я никогда не был).",
+                         "en-ru": "Russian puts не right before the word it negates (Я не знаю) and uses double negatives normally (Я никого не вижу), unlike English." } },
+            { "title": { "en": "Having and \"there is\"", "ru": "«У меня есть» и «есть»" },
+              "focus": { "ru-en": "English uses 'I have a car' and 'There is / There are'; Russian says 'У меня есть машина' and 'В комнате есть стол'.",
+                         "en-ru": "Russian says 'У меня есть машина' (literally 'by me there is a car') instead of a verb 'to have'; 'there is' is 'есть' or just the noun (В комнате стол)." } }
+          ]
+        },
+        {
+          "id": "sentence_building", "emoji": "🧱",
+          "name": { "en": "Building sentences", "ru": "Строим предложения" },
+          "items": [
+            { "title": { "en": "The sentence formula", "ru": "Формула предложения" },
+              "focus": { "ru-en": "The English formula Subject + Verb + Object + Place + Time (I read books at home in the evening); how to build any sentence block by block.",
+                         "en-ru": "A Russian sentence formula: Subject + Verb + Object, with time and place often placed first (Вечером я читаю книги дома); how to build any sentence block by block." } },
+            { "title": { "en": "Adding details", "ru": "Добавляем детали" },
+              "focus": { "ru-en": "Where adjectives (before the noun) and adverbs (after the verb or at the end) go in English, and the order of several adjectives (a nice big old house).",
+                         "en-ru": "Making adjectives agree as you add them (моя новая красная машина) and where adverbs go (usually before the verb: Я быстро бегу)." } },
+            { "title": { "en": "Joining ideas", "ru": "Соединяем мысли" },
+              "focus": { "ru-en": "Joining clauses with and, but, because, so, when; English uses fewer commas than Russian (no comma before 'that' or 'because').",
+                         "en-ru": "Joining clauses with и, а, но, потому что, когда, что; Russian always puts a comma before these clause words." } },
+            { "title": { "en": "Past and future", "ru": "Прошлое и будущее" },
+              "focus": { "ru-en": "Building past sentences (-ed or irregular forms, 'did' in questions) and future sentences (will / going to); compare with the Russian past that changes by gender and the future with буду.",
+                         "en-ru": "The Russian past agrees with gender (он читал, она читала); the future uses буду + infinitive or a perfective verb (я прочитаю)." } },
+            { "title": { "en": "Longer sentences", "ru": "Сложные предложения" },
+              "focus": { "ru-en": "Making a simple sentence longer step by step: who/which/that clauses and 'if' sentences.",
+                         "en-ru": "Making a simple sentence longer step by step: который clauses (agreeing in gender and case) and если sentences." } }
+          ]
+        }
+      ]
+    }
+  ]
+}

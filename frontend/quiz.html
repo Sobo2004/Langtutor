@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quiz - LangTutor</title>
+  <link rel="stylesheet" href="/static/mila.css" />
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -38,307 +39,203 @@
     }
     .header a:hover { background: #e9eaff; }
 
-    /* Setup card */
+    /* Setup: Mila invites you to review your lessons */
     .setup-card {
       background: rgba(255,255,255,0.95);
       border-radius: 16px;
       padding: 28px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
-    .setup-title { font-size: 20px; font-weight: 800; color: #333; margin-bottom: 16px; }
-    .setup-section { margin-top: 20px; }
-    .setup-section h3 { font-size: 14px; color: #555; margin-bottom: 10px; font-weight: 800; }
-
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    .category-card {
-      border: 2px solid #e6e6e6;
-      background: #fff;
-      border-radius: 14px;
-      padding: 14px;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: center;
-      user-select: none;
-    }
-    .category-card:hover { border-color: #667eea; background:#f7f8ff; }
-    .category-card.active { border-color:#667eea; background:#eef0ff; }
-    .category-card .emoji { font-size: 24px; margin-bottom: 6px; }
-    .category-card .label { font-weight: 800; color:#333; font-size: 13px; }
-    .category-card .desc { font-size: 12px; color:#777; margin-top: 4px; }
-
-    .difficulty-row { display:flex; gap:10px; }
-    .difficulty-btn {
-      flex:1;
-      border: 2px solid #e6e6e6;
-      background: #fff;
-      border-radius: 14px;
-      padding: 12px;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: center;
-      font-weight: 800;
-      color:#333;
-    }
-    .difficulty-btn:hover { border-color:#667eea; background:#f7f8ff; }
-    .difficulty-btn.active { border-color:#667eea; background:#eef0ff; }
-
-    .question-count {
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .count-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: none;
-      cursor:pointer;
-      font-weight: 900;
-      background: #f3f4ff;
-      color:#667eea;
-      transition: 0.2s;
+    .setup-hero { display: flex; align-items: center; gap: 18px; }
+    .setup-hero .mila-face { width: 104px; height: 104px; }
+    .setup-hero-text { flex: 1; min-width: 0; }
+    .setup-say {
+      position: relative;
+      display: inline-block;
+      background: #f1f2fb;
+      border-radius: 18px;
+      border-bottom-left-radius: 6px;
+      padding: 12px 16px;
       font-size: 18px;
-    }
-    .count-btn:hover { background:#e9eaff; }
-    .count-display {
-      width: 70px;
-      height: 44px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius: 12px;
-      background:#fff;
-      border:2px solid #e6e6e6;
       font-weight: 900;
-      color:#333;
+      color: #222;
+    }
+    .setup-sub { font-size: 13px; color: #666; font-weight: 700; margin-top: 8px; }
+    .lesson-words { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .lesson-words span {
+      background: #f3f4ff; color: #4b4f9e; border-radius: 999px;
+      padding: 4px 10px; font-size: 13px; font-weight: 800;
     }
 
     .start-btn {
-      margin-top: 22px;
+      margin-top: 24px;
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       border-radius: 14px;
       border: none;
       cursor: pointer;
-      background: linear-gradient(135deg,#667eea,#764ba2);
+      background: #58cc02;
+      box-shadow: 0 4px 0 #46a302;
       color: white;
       font-weight: 900;
-      font-size: 15px;
-      transition: 0.2s;
+      font-size: 17px;
     }
-    .start-btn:hover { transform: translateY(-1px); }
+    .start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #46a302; }
+    .start-btn.go-chat { background: linear-gradient(135deg,#667eea,#764ba2); box-shadow: 0 4px 0 #5a4a9a; }
+
+    .setup-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px 20px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #666;
+      font-weight: 700;
+    }
+    .setup-footer button {
+      border: none; background: none; padding: 0; cursor: pointer;
+      color: #667eea; font-weight: 900; font-size: 13px;
+    }
+    .setup-footer button:hover { text-decoration: underline; }
+    .topic-links button + button::before { content: "·"; color: #aaa; margin: 0 6px; display: inline-block; }
 
     /* Screens */
     .quiz-screen, .results-screen, .review-screen { display:none; }
     .quiz-screen.active, .results-screen.active, .review-screen.active { display:block; }
 
-    /* Timer + hearts */
-    .timer-container {
-      background: rgba(255,255,255,0.95);
-      border-radius: 16px;
-      padding: 18px 20px;
-      margin-top: 18px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    .timer-header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; }
-    .timer-text { color:#555; font-weight: 800; font-size: 13px; }
-    .timer-value { color:#333; font-weight: 900; font-size: 13px; }
-
-    .hud-right {
-      display:flex;
-      gap:14px;
-      align-items:center;
-      font-weight: 900;
-      color:#333;
-      user-select:none;
-    }
-    .hearts {
-      display:flex;
-      gap:6px;
-      align-items:center;
-      background:#fff;
-      border:2px solid #eee;
-      border-radius: 14px;
-      padding: 8px 10px;
-    }
-    .hearts span { font-size: 16px; line-height: 1; }
-    .xp-mini {
-      display:flex;
-      gap:6px;
-      align-items:center;
-      background:#fff;
-      border:2px solid #eee;
-      border-radius: 14px;
-      padding: 8px 10px;
-      font-size: 13px;
-    }
-
-    .timer-bar {
-      width:100%;
-      height: 10px;
-      background: #eaeaea;
-      border-radius: 999px;
-      overflow:hidden;
-    }
-    .timer-fill {
-      height: 10px;
-      width: 100%;
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      border-radius: 999px;
-      transition: width 1s linear;
-    }
-
-    /* Question card */
-    .question-card {
-      background: rgba(255,255,255,0.95);
-      border-radius: 16px;
-      padding: 24px 24px;
-      margin-top: 18px;
+    /* ===== Chat quiz ===== */
+    .chat-shell {
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 150px);
+      min-height: 520px;
+      overflow: hidden;
     }
-    .question-header {
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
-      margin-bottom: 14px;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .question-number {
-      font-weight: 900;
-      color:#333;
-      font-size: 13px;
-      background:#f3f4ff;
-      border-radius: 999px;
-      padding: 8px 12px;
-    }
-    .question-category {
-      font-weight: 900;
-      color:#333;
-      font-size: 13px;
-      background:#fff;
-      border:2px solid #eee;
-      border-radius: 999px;
-      padding: 8px 12px;
-    }
-
-    .prompt-text {
-      font-size: 13px;
-      font-weight: 900;
-      color:#555;
-      margin-bottom: 10px;
-    }
-    .question-text {
-      font-size: 20px;
-      font-weight: 900;
-      color:#222;
-      line-height: 1.25;
-      margin-bottom: 14px;
-    }
-
-    .hint-row {
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin-bottom: 14px;
-    }
-    .hint-btn {
-      background:#f3f4ff;
-      border:none;
-      border-radius: 12px;
-      padding: 10px 12px;
-      cursor:pointer;
-      font-weight: 900;
-      color:#667eea;
-      transition: 0.2s;
-    }
-    .hint-btn:hover { background:#e9eaff; }
-    .hint-text { font-size: 13px; color:#555; display:none; }
-
-    .answer-grid {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 6px;
-    }
-
-    .answer-option {
-      background: #f8f9fa;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 18px 18px;
-      cursor: pointer;
-      transition: all 0.2s;
+    .chat-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      position: relative;
-      font-weight: 900;
-      color:#333;
-      user-select:none;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
     }
-    .answer-option:hover { border-color: #667eea; transform: translateY(-1px); }
-    .answer-option.selected { border-color: #667eea; background: #e8eaf6; }
-    .answer-option.correct { border-color: #28a745; background: #d4edda; }
-    .answer-option.wrong { border-color: #dc3545; background: #f8d7da; }
-    .answer-option:disabled { opacity: 0.9; cursor: not-allowed; transform:none; }
+    .chat-header .mila-face { width: 64px; height: 64px; }
+    .chat-header-info { flex: 1; min-width: 80px; }
+    .chat-name { font-weight: 900; color: #222; font-size: 16px; }
+    .chat-status { font-size: 12px; color: #28a745; font-weight: 800; }
+    .hud-right { display: flex; gap: 8px; align-items: center; font-weight: 900; color: #333; user-select: none; }
+    .hearts, .xp-mini {
+      display: flex; gap: 4px; align-items: center;
+      background: #fff; border: 2px solid #eee; border-radius: 12px;
+      padding: 6px 9px; font-size: 13px;
+    }
+    .hearts span { font-size: 14px; line-height: 1; transition: opacity 0.3s; }
+    .mute-btn {
+      border: none; background: #f3f4ff; border-radius: 10px;
+      width: 34px; height: 34px; cursor: pointer; font-size: 15px;
+    }
+    .mute-btn:hover { background: #e9eaff; }
 
-    .type-wrap {
-      display:flex;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .type-input {
+    .bars { padding: 0 16px; }
+    .progress-bar { width: 100%; background: #eaeaea; border-radius: 999px; overflow: hidden; }
+    .progress-bar { height: 10px; margin-top: 10px; }
+    .progress-fill { height: 100%; width: 0; background: #58cc02; border-radius: 999px; transition: width 0.4s ease; }
+
+    .chat-log {
       flex: 1;
-      padding: 14px 14px;
-      border-radius: 12px;
-      border: 2px solid #e0e0e0;
-      font-size: 14px;
-      outline: none;
-      font-weight: 700;
-    }
-    .type-input:focus { border-color:#667eea; }
-    .check-btn {
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      color: white;
-      font-weight: 900;
-      min-width: 120px;
-    }
-
-    /* Feedback bar (Duolingo vibe) */
-    .feedback {
-      margin-top: 14px;
-      border-radius: 14px;
-      padding: 14px 14px;
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
+      overflow-y: auto;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
     }
-    .feedback.ok { background:#d4edda; border:2px solid #b7e0c1; }
-    .feedback.bad { background:#f8d7da; border:2px solid #f2b8bf; }
-    .fb-left { display:flex; flex-direction:column; gap:4px; }
-    .fb-title { font-weight: 900; color:#222; }
-    .fb-sub { font-size: 13px; color:#333; line-height: 1.25; }
-    .continue-btn {
-      border:none;
-      cursor:pointer;
-      font-weight: 900;
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: #111;
-      color:#fff;
-      white-space: nowrap;
+    .msg { display: flex; gap: 8px; align-items: flex-end; max-width: 85%; animation: msg-in 0.25s ease; }
+    .msg.mila { align-self: flex-start; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    @keyframes msg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .mini-avatar { width: 34px; height: 34px; flex-shrink: 0; }
+    .mini-avatar svg { width: 100%; height: 100%; }
+    .mini-avatar .eyes-happy, .mini-avatar .mouth-open, .mini-avatar .mouth-sad { display: none; }
+    .bubble {
+      padding: 11px 14px;
+      border-radius: 18px;
+      line-height: 1.35;
+      color: #222;
+      font-weight: 700;
+      word-break: break-word;
     }
+    .msg.mila .bubble { background: #f1f2fb; border-bottom-left-radius: 6px; }
+    .msg.user .bubble { background: linear-gradient(135deg,#667eea,#764ba2); color: #fff; border-bottom-right-radius: 6px; }
+    .msg.user.correct .bubble { background: #58cc02; }
+    .msg.user.wrong .bubble { background: #ff4b4b; }
+    .bubble .sub { font-size: 12px; color: #777; font-weight: 700; margin-top: 3px; }
+    .bubble .q-prompt { font-size: 12px; color: #764ba2; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
+    .bubble .q-text { font-size: 19px; font-weight: 900; margin-top: 3px; }
+    .bubble .q-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .bubble .hint { font-size: 13px; color: #555; margin-top: 6px; }
+    .bubble .answer-line { margin-top: 6px; font-size: 14px; }
+    .pill-btn {
+      border: none; background: #fff; border-radius: 999px; padding: 5px 10px;
+      font-weight: 900; font-size: 12px; color: #667eea; cursor: pointer;
+    }
+    .pill-btn:hover { background: #e9eaff; }
+    .play-big {
+      width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
+      background: #1cb0f6; color: #fff; font-size: 28px; margin-top: 8px;
+      box-shadow: 0 4px 0 #1899d6;
+    }
+    .play-big:active { transform: translateY(2px); box-shadow: 0 2px 0 #1899d6; }
+    .typing { display: flex; gap: 4px; padding: 14px 16px; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: #9aa0c3; animation: typing 1s infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typing { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+    .composer { border-top: 1px solid #eee; padding: 14px 16px; min-height: 76px; }
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .choice {
+      display: flex; align-items: center; gap: 8px;
+      background: #fff; border: 2px solid #e0e0e0; border-bottom-width: 4px; border-radius: 14px;
+      padding: 12px 14px; cursor: pointer; font-weight: 900; color: #333; text-align: left; font-size: 15px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .choice:hover { border-color: #667eea; background: #f7f8ff; }
+    .choice .key { font-size: 11px; color: #aaa; border: 2px solid #e6e6e6; border-radius: 6px; padding: 0 5px; }
+    .choice .label { flex: 1; }
+    .choice .listen { border: none; background: #f3f4ff; border-radius: 8px; padding: 4px 7px; cursor: pointer; font-size: 13px; }
+    .type-row { display: flex; gap: 8px; }
+    .type-input {
+      flex: 1; padding: 13px 14px; border-radius: 14px; border: 2px solid #e0e0e0;
+      font-size: 16px; outline: none; font-weight: 700; min-width: 0;
+    }
+    .type-input:focus { border-color: #667eea; }
+    .icon-btn {
+      border: none; border-radius: 14px; width: 50px; cursor: pointer; font-size: 20px;
+      background: #f3f4ff;
+    }
+    .icon-btn.recording { background: #ff4b4b; animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(255,75,75,0.25); } }
+    .send-btn, .continue-btn {
+      border: none; border-radius: 14px; padding: 0 20px; cursor: pointer; font-weight: 900; color: #fff;
+      background: #58cc02; box-shadow: 0 4px 0 #46a302; font-size: 15px;
+    }
+    .send-btn:active, .continue-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #46a302; }
+    .continue-btn { width: 100%; padding: 14px; }
+    .continue-btn.bad { background: #ff4b4b; box-shadow: 0 4px 0 #ea2b2b; }
+    .composer-note { font-size: 12px; color: #888; margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .link-btn { border: none; background: none; color: #667eea; font-weight: 900; cursor: pointer; font-size: 12px; padding: 0; }
+
+    .results-tutor { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 6px; }
+    .results-tutor .tutor-bubble {
+      background: #f1f2fb; border-radius: 16px; padding: 12px 16px; text-align: left;
+    }
+    .tutor-name { font-size: 11px; font-weight: 900; color: #764ba2; text-transform: uppercase; letter-spacing: 0.06em; }
+    .tutor-say { font-size: 17px; font-weight: 900; color: #222; margin-top: 2px; }
+    .tutor-sub { font-size: 12px; color: #777; font-weight: 700; margin-top: 2px; }
 
     /* Results */
     .results-screen {
@@ -411,25 +308,24 @@
       margin-top: 18px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
-    .review-header-bar { display:flex; justify-content:center; margin-bottom: 12px; }
-    .review-item {
-      background:#fff;
-      border:2px solid #eee;
-      border-radius: 14px;
-      padding: 14px;
-      margin-top: 12px;
-      position: relative;
+    .review-header-bar { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom: 12px; }
+    .review-summary { font-size: 13px; color: #666; font-weight: 800; }
+    /* The quiz chat is moved here as-is, so its 🔊 and hint buttons keep working */
+    .review-chat { background: #fafbff; border: 1px solid #eee; border-radius: 16px; }
+    .review-chat .chat-log { max-height: 65vh; }
+
+    .start-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+    @media (max-width: 600px) {
+      .setup-hero { flex-direction: column; text-align: center; }
+      .choice-grid { grid-template-columns: 1fr; }
+      .chat-shell { height: calc(100vh - 110px); }
+      .chat-header .mila-face { width: 48px; height: 48px; }
+      .msg { max-width: 95%; }
     }
-    .review-badge {
-      position:absolute;
-      top: 12px;
-      right: 12px;
-      font-size: 18px;
-      font-weight: 1000;
+    @media (prefers-reduced-motion: reduce) {
+      .msg, .typing span { animation: none !important; }
     }
-    .review-q { font-weight: 1000; color:#222; margin-bottom: 8px; }
-    .review-a, .review-c { font-size: 13px; color:#333; margin-top: 6px; font-weight: 800; }
-    .review-exp { font-size: 13px; color:#666; margin-top: 8px; font-weight: 700; }
   </style>
 </head>
 
@@ -440,111 +336,69 @@
       <a href="/">← Back to Chat</a>
     </div>
 
-    <!-- Setup Screen -->
+    <!-- Setup Screen: Mila invites you to review what you learnt in chat -->
     <div class="setup-card" id="setupScreen">
-      <div class="setup-title">Quick Quiz 🧩</div>
-
-      <div class="setup-section">
-        <h3>Choose Category</h3>
-        <div class="category-grid">
-          <div class="category-card active" data-category="greetings">
-            <div class="emoji">👋</div>
-            <div class="label">Greetings</div>
-            <div class="desc">Hello, thanks, goodbye</div>
-          </div>
-          <div class="category-card" data-category="travel">
-            <div class="emoji">🧭</div>
-            <div class="label">Travel</div>
-            <div class="desc">Directions, help, taxi</div>
-          </div>
-          <div class="category-card" data-category="food">
-            <div class="emoji">🍜</div>
-            <div class="label">Food</div>
-            <div class="desc">Menu, bill, ordering</div>
-          </div>
-          <div class="category-card" data-category="mixed">
-            <div class="emoji">🎲</div>
-            <div class="label">Mixed</div>
-            <div class="desc">A bit of everything</div>
-          </div>
+      <div class="setup-hero">
+        <div class="mila-face" id="setupMila"></div>
+        <div class="setup-hero-text">
+          <div class="setup-say" id="setupSay">…</div>
+          <div class="setup-sub" id="setupSub"></div>
+          <div class="lesson-words" id="lessonWords"></div>
         </div>
       </div>
 
-      <div class="setup-section">
-        <h3>Difficulty</h3>
-        <div class="difficulty-row">
-          <button class="difficulty-btn active" data-difficulty="beginner">Beginner</button>
-          <button class="difficulty-btn" data-difficulty="intermediate">Intermediate</button>
-          <button class="difficulty-btn" data-difficulty="advanced">Advanced</button>
+      <button class="start-btn" id="startBtn" type="button" disabled>…</button>
+
+      <div class="setup-footer">
+        <div>
+          <span id="learningLabel"></span> ·
+          <button type="button" id="switchLangBtn"></button>
+        </div>
+        <div class="topic-links">
+          <span id="topicsLabel"></span>
+          <button type="button" data-topic="greetings"></button><button type="button" data-topic="travel"></button><button type="button" data-topic="food"></button>
         </div>
       </div>
-
-      <div class="setup-section">
-        <h3>Number of Questions</h3>
-        <div class="question-count">
-          <button class="count-btn" onclick="changeCount(-5)">-</button>
-          <div class="count-display" id="questionCount">10</div>
-          <button class="count-btn" onclick="changeCount(5)">+</button>
-        </div>
-      </div>
-
-      <button class="start-btn" onclick="startQuiz()">Start Quiz 🚀</button>
     </div>
 
-    <!-- Quiz Screen -->
+    <!-- Quiz Screen (chat with Mila) -->
     <div class="quiz-screen" id="quizScreen">
-      <div class="timer-container">
-        <div class="timer-header">
-          <span class="timer-text">Time Remaining</span>
-
+      <div class="chat-shell">
+        <div class="chat-header">
+          <div class="mila-face" id="tutor"></div>
+          <div class="chat-header-info">
+            <div class="chat-name">Mila</div>
+            <div class="chat-status" id="tutorStatus">online</div>
+          </div>
           <div class="hud-right">
-            <div class="xp-mini">✨ <span id="xpMini">0</span> XP</div>
+            <div class="xp-mini" title="XP">✨ <span id="xpMini">0</span></div>
             <div class="hearts" title="Hearts (lives)">
-              <span id="heart1">❤️</span>
-              <span id="heart2">❤️</span>
-              <span id="heart3">❤️</span>
+              <span id="heart1">❤️</span><span id="heart2">❤️</span><span id="heart3">❤️</span>
             </div>
-            <span class="timer-value" id="timerDisplay">5:00</span>
+            <button class="mute-btn" id="muteBtn" type="button" title="Mute Mila">🔈</button>
           </div>
         </div>
-
-        <div class="timer-bar">
-          <div class="timer-fill" id="timerFill" style="width:100%"></div>
-        </div>
-      </div>
-
-      <div class="question-card">
-        <div class="question-header">
-          <span class="question-number" id="questionNumber">Question 1 of 10</span>
-          <span class="question-category" id="questionCategory">Greetings</span>
+        <div class="bars">
+          <div class="progress-bar" title="Progress"><div class="progress-fill" id="progressFill"></div></div>
         </div>
 
-        <div class="prompt-text" id="promptText"></div>
-        <div class="question-text" id="questionText">Loading question...</div>
+        <div class="chat-log" id="chatLog" aria-live="polite"></div>
 
-        <div class="hint-row">
-          <button class="hint-btn" id="hintBtn" type="button">💡 Hint</button>
-          <span class="hint-text" id="hintText"></span>
-          <button onclick="speakQuizQuestion()"
-            style="margin-left:auto;background:#28a745;color:white;border:none;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer"
-            title="Listen">🔊</button>
-        </div>
-
-        <div class="answer-grid" id="answerGrid"></div>
-
-        <!-- typing container (shown only for typing questions) -->
-        <div class="type-wrap" id="typeWrap" style="display:none;">
-          <input class="type-input" id="typeInput" placeholder="Type your answer..." />
-          <button class="check-btn" id="checkBtn" type="button">Check</button>
-        </div>
-
-        <div id="feedbackArea"></div>
+        <div class="composer" id="composer"></div>
       </div>
     </div>
 
     <!-- Results Screen -->
     <div class="results-screen" id="resultsScreen">
-      <div class="results-icon" id="resultsIcon">🎉</div>
+      <div class="results-tutor">
+        <div class="mila-face">
+        </div>
+        <div class="tutor-bubble">
+          <div class="tutor-name">Mila</div>
+          <div class="tutor-say" id="resultsTutorSay"></div>
+          <div class="tutor-sub" id="resultsTutorSub"></div>
+        </div>
+      </div>
       <h2 class="results-title" id="resultsTitle">Quiz Complete!</h2>
       <p class="results-subtitle" id="resultsSubtitle">Here’s how you did:</p>
 
@@ -573,7 +427,7 @@
       </div>
 
       <div class="quiz-nav">
-        <button class="nav-btn secondary" id="reviewBtn" onclick="reviewAnswers()">📋 Review Answers</button>
+        <button class="nav-btn secondary" id="reviewBtn" onclick="reviewAnswers()">💬 Review the chat</button>
         <button class="nav-btn secondary" onclick="location.reload()">Take Another Quiz</button>
         <button class="nav-btn primary" onclick="location.href='/'">Back to Chat →</button>
       </div>
@@ -582,9 +436,10 @@
     <!-- Review Screen -->
     <div class="review-screen" id="reviewScreen">
       <div class="review-header-bar">
-        <h2>📋 Review Your Answers</h2>
+        <h2>💬 Your chat with Mila</h2>
+        <div class="review-summary" id="reviewSummary"></div>
       </div>
-      <div id="reviewList"></div>
+      <div class="review-chat" id="reviewList"></div>
       <div class="quiz-nav" style="margin-top: 18px;">
         <button class="nav-btn secondary" onclick="backToResults()">← Back to Results</button>
         <button class="nav-btn primary" onclick="location.reload()">Take Another Quiz</button>
@@ -592,6 +447,7 @@
     </div>
   </div>
 
+  <script src="/static/mila.js"></script>
   <script src="/static/quiz.js"></script>
 </body>
 </html>

@@ -341,8 +341,8 @@ function closePopup() {
   var messagesDiv = document.getElementById('messages');
   if (messagesDiv && messagesDiv.children.length === 0 && typeof addMessage === 'function') {
     addMessage(
-      'Привет! (pree-VYET — Hello!) I\'m your Russian language tutor.\n\n' +
-      'I teach one word at a time. Practice each word 3 times before moving on!\n\n' +
+      'Привет! (pree-VYET — Hello!) I\'m Mila, your Russian tutor.\n\n' +
+      'I teach one word at a time, with a quick check after each one. Every 5 words we do a mini quiz!\n\n' +
       '🎤 Mic to speak  |  🔊 Speaker to listen\n\n' +
       'Click a lesson or type "teach me greetings"! 🇷🇺',
       'bot'

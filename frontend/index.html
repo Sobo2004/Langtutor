@@ -5,6 +5,7 @@
   <title>LangTutor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/mila.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* Auth Pages Styles */
@@ -240,13 +241,14 @@
   <aside class="sidebar">
     <div class="sidebar-content">
       <h1>📚 LangTutor</h1>
-      <div class="language-toggle" onclick="toggleLanguage()">
+      <div class="language-toggle" id="tourLanguage" onclick="toggleLanguage()">
         <span id="langFrom">English</span>
         <span style="margin:0 6px;">→</span>
         <span id="langTo">Russian</span>
         <span style="margin-left:8px;font-size:12px;opacity:0.7;">🔄</span>
       </div>
 
+      <div id="tourProgress">
       <div class="progress-card">
         <div class="progress-top">
           <span>Level <span id="userLevel">1</span></span>
@@ -263,17 +265,20 @@
         <div>🎯 <span id="proficiencyLevel">A1</span><br/ data-i18n="proficiency_level">Level</div>
         <div>📚 <span id="completedCount">0</span><br/ data-i18n="completed">Words</div>
       </div>
+      </div>
 
-      <h3 data-i18n="quick_start">Quick Start</h3>
-      <button onclick="startLesson('a1_greetings')">📘 Greetings</button>
-      <button onclick="startLesson('a1_travel')">🧳 Travel</button>
-      <button onclick="startLesson('a2_food')">🍽 Food</button>
-      <button id="stopLessonBtn" class="danger hidden" onclick="stopLesson()">⛔ Stop Lesson</button>
+      <div id="tourLessons">
+      <!-- Course map: levels and topics with progress (rendered by lesson-flow.js) -->
+      <div id="courseMap"></div>
+      </div>
 
+      <div id="tourExplore">
       <h3 style="margin-top:18px;">Explore</h3>
       <a href="/progress"   style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📈 My Progress</a>
       <a href="/leaderboard" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">🏆 Leaderboard</a>
       <a href="/quiz" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📝 Quiz</a>
+      </div>
+      <a href="#" id="tourReplayLink" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">🧭 Take the tour</a>
 
     </div>
 
@@ -290,8 +295,21 @@
   <main class="chat">
 
     <header>
-      <h2 id="chatTitle">💬 Chat with your tutor</h2>
-      <span class="badge">Learning: 🇷🇺 Russian</span>
+      <div class="mila-header">
+        <div class="mila-face" id="milaHeaderFace"></div>
+        <div>
+          <h2 id="chatTitle">Chat with Mila</h2>
+          <div class="mila-status" id="milaStatus">online</div>
+        </div>
+      </div>
+      <div class="mila-header-right">
+        <div class="round-progress" id="roundProgress" hidden>
+          <div class="round-label" id="roundLabel"></div>
+          <div class="round-bar"><div class="round-fill" id="roundFill"></div></div>
+        </div>
+        <button class="mila-mute" id="milaMuteBtn" type="button" title="Mute Mila">🔈</button>
+        <span class="badge">Learning: 🇷🇺 Russian</span>
+      </div>
     </header>
 
     <div id="messages" class="messages"></div>
@@ -325,7 +343,7 @@
 
     <!-- Screen 1: Welcome greeting -->
     <div class="popup-screen active" id="screenWelcome">
-      <div class="popup-icon">👋</div>
+      <div class="popup-icon"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 id="popupGreeting">Welcome back!</h2>
       <p id="popupStreak" class="popup-sub"></p>
       <div id="popupReviewRow" class="popup-review-row"></div>
@@ -356,7 +374,7 @@
       <div class="onboard-progress"><div class="onboard-progress-fill" style="width:25%"></div></div>
       <div class="onboard-mascot">
         <div class="mascot-bubble">Why are you learning Russian?</div>
-        <div class="mascot">🦉</div>
+        <div class="mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       </div>
       <div class="onboard-options" id="onboardWhyOptions">
         <button class="onboard-opt" data-val="career">💼 Boost my career</button>
@@ -374,7 +392,7 @@
       <div class="onboard-progress"><div class="onboard-progress-fill" style="width:50%"></div></div>
       <div class="onboard-mascot">
         <div class="mascot-bubble">What's your daily learning goal?</div>
-        <div class="mascot">🦉</div>
+        <div class="mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       </div>
       <div class="onboard-options" id="onboardGoalOptions">
         <button class="onboard-opt onboard-goal-opt" data-val="5">
@@ -420,7 +438,7 @@
     <div class="popup-screen" id="screenFeedback">
       <div class="popup-icon">💬</div>
       <h2>How's it going?</h2>
-      <p class="popup-sub">Are you enjoying learning Russian with LangTutor?</p>
+      <p class="popup-sub">Are you enjoying learning Russian with Mila?</p>
       <div class="popup-feedback-btns">
         <button class="popup-fb-btn fb-love" id="btnLove">😍 Love it!</button>
         <button class="popup-fb-btn fb-good" id="btnGood">👍 It's good</button>
@@ -551,7 +569,10 @@
 
 <script src="/static/auth-functions.js"></script>
 <script src="/static/translations.js?v=2"></script>
+<script src="/static/mila.js"></script>
 <script src="/static/app.js?v=2"></script>
+<script src="/static/lesson-flow.js"></script>
+<script src="/static/tour.js"></script>
 <script src="/static/welcome.js?v=2"></script>
 <script>
   // Auth functionality
@@ -839,7 +860,7 @@ setTimeout(() => {
 
     <!-- Step 1: Avatar Selection -->
     <div id="step1" class="onboarding-step active">
-      <div class="recap-mascot">🦉</div>
+      <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Choose Your Avatar!</h2>
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Pick an emoji that represents you</p>
 
@@ -857,7 +878,7 @@ setTimeout(() => {
 
     <!-- Step 2: Why Learning -->
     <div id="step2" class="onboarding-step">
-      <div class="recap-mascot">🦉</div>
+      <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Why Russian?</h2>
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Tell us what motivates you</p>
 
@@ -872,7 +893,7 @@ setTimeout(() => {
 
     <!-- Step 3: Goal -->
     <div id="step3" class="onboarding-step">
-      <div class="recap-mascot">🦉</div>
+      <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">What's Your Goal?</h2>
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Choose your main learning objective</p>
 
@@ -904,7 +925,7 @@ setTimeout(() => {
 
     <!-- Step 4: Current Level -->
     <div id="step4" class="onboarding-step">
-      <div class="recap-mascot">🦉</div>
+      <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Current Level?</h2>
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">How much Russian do you know?</p>
 
@@ -935,7 +956,7 @@ setTimeout(() => {
 
     <!-- Step 5: Daily Goal -->
     <div id="step5" class="onboarding-step">
-      <div class="recap-mascot">🦉</div>
+      <div class="recap-mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       <h2 style="color:white;margin-bottom:12px;font-size:26px;text-align:center;">Daily Practice Goal</h2>
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">How much time can you commit?</p>
 
@@ -960,7 +981,7 @@ setTimeout(() => {
 
       <div style="display:flex;gap:10px;margin-top:24px;">
         <button class="recap-secondary" onclick="prevStep(4)" style="flex:1;">← Back</button>
-        <button class="recap-primary" onclick="submitOnboarding()" style="flex:2;">🦉 Start My Journey!</button>
+        <button class="recap-primary" onclick="submitOnboarding()" style="flex:2;">Start learning with Mila!</button>
       </div>
     </div>
 
@@ -976,7 +997,7 @@ setTimeout(() => {
 <div id="onboardingAvatarModal" class="avatar-modal" aria-hidden="true">
   <div class="avatar-modal-card">
     <div class="avatar-modal-header">
-      <h3>Choose Your Avatar 🦉</h3>
+      <h3>Choose Your Avatar</h3>
       <button class="avatar-close" onclick="closeOnboardingAvatarPicker()" aria-label="Close">&times;</button>
     </div>
     <div id="onboardingAvatarGrid" class="avatar-grid"></div>
