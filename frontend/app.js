@@ -17,10 +17,6 @@ let lastBotMessage = "";
 // Language mode toggle
 let currentMode = localStorage.getItem('languageMode') || 'en-ru'; // 'en-ru' or 'ru-en'
 
-// Session timer for daily goal
-let sessionStartTime = null;
-let sessionTimerInterval = null;
-let timeUpShown = false;
 
 // Initialize speech recognition
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -434,87 +430,78 @@ if (input) {
   });
 }
 
-// ========== SESSION TIMER FOR DAILY GOAL ==========
+// ========== DAILY GOAL (active learning time) ==========
+// Counts only real learning time: logged in, tab visible, the learner used the page
+// in the last 2 minutes, and no tour/onboarding/popup on screen. The total is kept
+// per user per day (survives reloads), and the "time's up" popup shows once a day,
+// at a calm moment (not over another popup, not while Mila is talking).
 
-function startSessionTimer() {
-  if (sessionStartTime) return; // Already started
-  
-  sessionStartTime = Date.now();
-  timeUpShown = false;
-  
-  console.log('Session timer started');
-  
-  // Check every 30 seconds
-  sessionTimerInterval = setInterval(checkDailyGoal, 30000);
+const GOAL_TICK_SECONDS = 15;
+const GOAL_IDLE_LIMIT_MS = 2 * 60 * 1000;
+let lastActivityAt = Date.now();
+
+['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(evt =>
+  document.addEventListener(evt, () => { lastActivityAt = Date.now(); }, { passive: true, capture: true })
+);
+
+function goalKeys() {
+  const user = (document.getElementById('usernameDisplay')?.textContent || '').trim() || 'anon';
+  const day = new Date().toLocaleDateString('en-CA');   // YYYY-MM-DD in local time
+  return { time: `learnSeconds:${user}:${day}`, shown: `goalShown:${user}:${day}` };
 }
 
-function checkDailyGoal() {
-  if (timeUpShown) return;
-  
-  const dailyGoalMinutes = parseInt(localStorage.getItem('dailyGoalMinutes') || '10', 10);
-  const elapsedMs = Date.now() - sessionStartTime;
-  const elapsedMinutes = Math.floor(elapsedMs / 60000);
-  
-  console.log(`Session time: ${elapsedMinutes}/${dailyGoalMinutes} minutes`);
-  
-  if (elapsedMinutes >= dailyGoalMinutes) {
-    showTimeUpPopup(dailyGoalMinutes);
+function readNumber(key) {
+  try { return parseInt(localStorage.getItem(key) || '0', 10) || 0; } catch (e) { return 0; }
+}
+
+function isLoggedIn() {
+  return document.getElementById('mainApp')?.classList.contains('active');
+}
+
+// Something else is on screen: onboarding, recap, welcome popup, the tour, the time-up popup
+function otherPopupOpen() {
+  return !!document.querySelector('.popup-overlay.active, #onboardingModal.active, #recapModal.active, .tour-card');
+}
+
+function milaIsTalking() {
+  return !!(window.Mila && Mila.voice.audio && !Mila.voice.audio.paused);
+}
+
+function dailyGoalTick() {
+  if (!isLoggedIn() || document.visibilityState !== 'visible' || otherPopupOpen()) return;
+  const keys = goalKeys();
+  const goalSeconds = parseInt(localStorage.getItem('dailyGoalMinutes') || '10', 10) * 60;
+
+  // Count this tick if the learner is active (or listening to Mila)
+  if (Date.now() - lastActivityAt < GOAL_IDLE_LIMIT_MS || milaIsTalking()) {
+    try { localStorage.setItem(keys.time, String(readNumber(keys.time) + GOAL_TICK_SECONDS)); } catch (e) {}
+  }
+
+  if (readNumber(keys.time) >= goalSeconds && !localStorage.getItem(keys.shown) && !milaIsTalking()) {
+    try { localStorage.setItem(keys.shown, '1'); } catch (e) {}
+    showTimeUpPopup(goalSeconds / 60);
   }
 }
 
 function showTimeUpPopup(minutes) {
-  timeUpShown = true;
   document.getElementById('goalMinutesDisplay').textContent = minutes;
   document.getElementById('timeUpPopup').classList.add('active');
-  
-  // Stop the timer
-  if (sessionTimerInterval) {
-    clearInterval(sessionTimerInterval);
-    sessionTimerInterval = null;
-  }
 }
 
 function closeTimeUpPopup() {
   document.getElementById('timeUpPopup').classList.remove('active');
 }
 
-// Wire time-up popup buttons
+// Wire time-up popup buttons (shown once a day, so "keep learning" just closes it)
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('btnTimeUpContinue').addEventListener('click', function() {
-    closeTimeUpPopup();
-    // Reset timer so they can continue
-    sessionStartTime = Date.now();
-    timeUpShown = false;
-    sessionTimerInterval = setInterval(checkDailyGoal, 30000);
-  });
-  
+  document.getElementById('btnTimeUpContinue').addEventListener('click', closeTimeUpPopup);
   document.getElementById('btnTimeUpDone').addEventListener('click', function() {
     closeTimeUpPopup();
     addMessage("Great work today! See you tomorrow! 👋", "bot");
   });
 });
 
-// Start timer when user logs in and main app becomes visible
-// This gets called from the auth check in index.html inline script
-window.addEventListener('DOMContentLoaded', function() {
-  // Start timer once main app is visible (user is logged in)
-  const observer = new MutationObserver(function(mutations) {
-    const mainApp = document.getElementById('mainApp');
-    if (mainApp && !mainApp.classList.contains('hidden') && !sessionStartTime) {
-      startSessionTimer();
-      observer.disconnect();
-    }
-  });
-  
-  const mainApp = document.getElementById('mainApp');
-  if (mainApp) {
-    observer.observe(mainApp, { attributes: true, attributeFilter: ['class'] });
-    // Also check immediately in case already visible
-    if (!mainApp.classList.contains('hidden')) {
-      startSessionTimer();
-    }
-  }
-});
+setInterval(dailyGoalTick, GOAL_TICK_SECONDS * 1000);
 
 // ========== LANGUAGE MODE TOGGLE ==========
 
