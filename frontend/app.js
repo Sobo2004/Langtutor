@@ -1000,3 +1000,34 @@ function escapeHtml(str) {
     "'": "&#39;"
   }[m]));
 }
+
+// ========== UPDATE NOTICE ==========
+// If the app is updated while this page is open, offer a refresh so the page
+// never runs a mix of old and new files.
+(function watchForUpdates() {
+  let loadedVersion = null;
+  async function check() {
+    try {
+      const res = await fetch('/api/version', { cache: 'no-store' });
+      if (!res.ok) return;
+      const { version } = await res.json();
+      if (loadedVersion === null) loadedVersion = version;
+      else if (version !== loadedVersion) showUpdateBar();
+    } catch (e) {}
+  }
+  function showUpdateBar() {
+    if (document.getElementById('updateBar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'updateBar';
+    bar.className = 'update-bar';
+    bar.innerHTML = '<span>✨ Mila has been updated.</span>';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Refresh';
+    btn.onclick = () => location.reload();
+    bar.appendChild(btn);
+    document.body.appendChild(bar);
+  }
+  check();
+  setInterval(check, 60000);
+})();

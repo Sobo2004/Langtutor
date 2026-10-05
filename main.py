@@ -549,6 +549,12 @@ def _versioned_page(filename: str) -> HTMLResponse:
 def home():
     return _versioned_page("index.html")
 
+@app.get("/api/version")
+def api_version():
+    """Changes whenever a frontend file changes, so open pages can offer a refresh."""
+    files = [f for f in FRONTEND_DIR.iterdir() if f.suffix in (".js", ".css", ".html")]
+    return {"version": max(int(f.stat().st_mtime) for f in files)}
+
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page():
     try:

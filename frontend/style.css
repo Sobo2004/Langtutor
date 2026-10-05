@@ -1460,3 +1460,15 @@ footer button:hover {
 .g-note { font-size: 13px; color: #555; margin-top: 4px; }
 .g-example { padding: 8px 10px; margin: 6px 0; background: #fff; border: 1px solid #eceef8; border-radius: 10px; }
 .g-tip { margin-top: 12px; padding: 10px 12px; background: #fffbe6; border: 1px solid #f3e3a0; border-radius: 10px; font-size: 14px; }
+
+/* "Mila has been updated" refresh bar */
+.update-bar {
+  position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 9000;
+  display: flex; align-items: center; gap: 12px;
+  background: #222; color: #fff; padding: 10px 12px 10px 16px; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25); font-size: 14px;
+}
+.update-bar button {
+  border: none; border-radius: 8px; padding: 6px 12px; font-weight: 700; cursor: pointer;
+  background: #58cc02; color: #fff;
+}
