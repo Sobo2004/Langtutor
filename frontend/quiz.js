@@ -891,6 +891,8 @@ async function finishQuiz(expired, endedByHearts = false) {
 
   quizScreen.classList.remove("active");
   resultsScreen.classList.add("active");
+  // Results/review have their own "Back to Chat" button, so hide the header one
+  document.getElementById("headerBackLink").hidden = true;
   reviewScreen.classList.remove("active");
 
   const total = Math.max(1, quizState.expectedTotal);
