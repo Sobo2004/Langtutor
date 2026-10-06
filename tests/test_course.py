@@ -63,3 +63,23 @@ def test_course_api(user):
     data = client.get("/api/course?language_mode=en-ru&difficulty=beginner").json()
     assert data["levels"][0]["topics"][0]["id"] == "greetings"
     assert data["active"]["topic"]["id"] == "greetings"
+
+
+def test_download_my_words_as_csv(user, app_module):
+    client, _, uid = user
+    con = app_module.db()
+    con.execute("INSERT INTO taught_words(user_id, word, pronunciation, meaning, lesson, difficulty, language_mode, created_at)"
+                " VALUES(?,?,?,?,?,?,?,date('now'))", (uid, "Спасибо", "spa-SEE-ba", "Thank you", "greetings", "beginner", "en-ru"))
+    con.commit()
+    con.close()
+    res = client.get("/api/export/words?language_mode=en-ru")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/csv")
+    assert "attachment" in res.headers["content-disposition"]
+    lines = res.content.decode("utf-8-sig").splitlines()
+    assert lines[0] == "Word,Meaning,Pronunciation,Topic,Learnt on"
+    assert lines[1].startswith("Спасибо,Thank you,spa-SEE-ba,greetings")
+
+
+def test_download_requires_login(client):
+    assert client.get("/api/export/words").status_code == 401

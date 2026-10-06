@@ -189,7 +189,7 @@
       .replace(/\[\[(WORD|EXAMPLE|GRAMMAR|BUILD)[\s\S]*$/, "")
       .replace(/\[SPEAK:[^\]]*\]/g, "")
       .replace(/https?:\/\/\S+/g, "")
-      .replace(/\(([a-z]+-)+[a-z?!]*\)|\([A-Za-z]*[A-Z]{2,}[A-Za-z-]*\)/g, "")   // (pree-VYET), (ZDRA-stvooy-tye)
+      .replace(/\s*\([A-Za-z]+(?:[- ][A-Za-z]+)*-[A-Za-z]+[?!]?\)/g, "")   // (pree-VYET), (ZDRA-stvooy-tye), (doh svee-DAN-ya)
       .replace(/[*_#`>|]/g, "")
       .replace(/\p{Extended_Pictographic}|️/gu, "")
       .replace(/[ \t]+/g, " ");

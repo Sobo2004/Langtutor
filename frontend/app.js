@@ -1062,3 +1062,8 @@ function escapeHtml(str) {
 document.getElementById('tourLanguage')?.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLanguage(); }
 });
+
+// "Download my words": export the words for the language currently being learnt
+document.getElementById('exportWordsLink')?.addEventListener('click', e => {
+  e.currentTarget.href = `/api/export/words?language_mode=${encodeURIComponent(currentMode)}`;
+});

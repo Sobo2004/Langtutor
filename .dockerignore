@@ -1,0 +1,10 @@
+# Never bake secrets or local data into the image
+.env
+*.db
+tts_cache/
+.venv/
+__pycache__/
+.git/
+.github/
+tests/
+.vscode/

@@ -2298,6 +2298,31 @@ def _prefer_lesson_questions(questions: list, lesson_words: list) -> list:
     on_topic = [q for q in questions if uses_lesson_word(q)]
     return on_topic + [q for q in questions if not uses_lesson_word(q)]
 
+@app.get("/api/export/words")
+def api_export_words(language_mode: str = "en-ru", session_id: Optional[str] = Cookie(default=None)):
+    """Download every word Mila has taught this user as a CSV file (opens in Excel/Sheets)."""
+    import csv, io
+    user_id = _require_user(session_id)
+    language_mode = language_mode if language_mode in ("en-ru", "ru-en") else "en-ru"
+    con = db()
+    rows = con.execute(
+        """SELECT word, meaning, pronunciation, lesson, MIN(created_at) AS learnt_on
+             FROM taught_words WHERE user_id=? AND language_mode=?
+             GROUP BY LOWER(word) ORDER BY MIN(id)""",
+        (user_id, language_mode),
+    ).fetchall()
+    con.close()
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Word", "Meaning", "Pronunciation", "Topic", "Learnt on"])
+    for r in rows:
+        writer.writerow([r["word"], r["meaning"] or "", r["pronunciation"] or "", (r["lesson"] or "").replace("_", " "), r["learnt_on"] or ""])
+    filename = f"langtutor-words-{language_mode}-{date.today().isoformat()}.csv"
+    # The BOM makes Excel read the Russian text correctly
+    return Response("﻿" + out.getvalue(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
 @app.get("/api/quiz/lesson-words")
 def api_quiz_lesson_words(language_mode: str = "en-ru", session_id: Optional[str] = Cookie(default=None)):
     """Words the user has learnt in chat — shown on the quiz setup screen."""

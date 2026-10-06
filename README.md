@@ -160,7 +160,23 @@ pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-Tests use a temporary database and a fake AI, so they never touch `app.db` or call OpenAI. They cover passwords and login, rate limits, the card parsers, the course content and progress, and a full chat lesson.
+Tests use a temporary database and a fake AI, so they never touch `app.db` or call OpenAI.
+
+- `tests/` (backend): passwords and login, rate limits, card parsers, course content and progress, word export, and a full chat lesson.
+- `tests/frontend/` (browser, Playwright): HTML escaping of AI replies, answer marking, what Mila reads aloud, the phone layout and keyboard access. Run `python -m playwright install chromium` once, or use an installed browser with `PW_CHANNEL=msedge`.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs every test on each push, then builds the Docker image and checks the container starts.
+
+---
+
+## 🐳 Docker
+
+```bash
+docker build -t langtutor .
+docker run -p 8000:8000 --env-file .env -v langtutor-data:/data langtutor
+```
+
+The database is kept in the `langtutor-data` volume; `.env` is never copied into the image.
 
 ---
 
