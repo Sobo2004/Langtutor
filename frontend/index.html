@@ -238,10 +238,10 @@
 <div class="app" id="mainApp">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-content">
       <h1>📚 LangTutor</h1>
-      <div class="language-toggle" id="tourLanguage" onclick="toggleLanguage()">
+      <div class="language-toggle" id="tourLanguage" role="button" tabindex="0" aria-label="Switch the language you are learning" onclick="toggleLanguage()">
         <span id="langFrom">English</span>
         <span style="margin:0 6px;">→</span>
         <span id="langTo">Russian</span>
@@ -295,6 +295,7 @@
   <main class="chat">
 
     <header>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">☰</button>
       <div class="mila-header">
         <div class="mila-face" id="milaHeaderFace"></div>
         <div>
@@ -312,7 +313,7 @@
       </div>
     </header>
 
-    <div id="messages" class="messages"></div>
+    <div id="messages" class="messages" role="log" aria-live="polite" aria-label="Conversation with Mila"></div>
 
     <!-- QUIZ (HIDDEN BY DEFAULT) -->
     <div id="quiz" class="quiz hidden">
@@ -327,9 +328,9 @@
 
     <!-- INPUT -->
     <footer>
-      <input id="messageInput" placeholder="Type your message or click 🎤 to speak…" />
-      <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
-      <button id="listenBtn" onclick="speakLastMessage()" title="Listen to last message">🔊</button>
+      <input id="messageInput" placeholder="Type your message or click 🎤 to speak…" aria-label="Message to Mila" />
+      <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input" aria-label="Speak your message">🎤</button>
+      <button id="listenBtn" onclick="speakLastMessage()" title="Listen to last message" aria-label="Hear the last word again">🔊</button>
       <button onclick="sendMessage()">Send</button>
     </footer>
 

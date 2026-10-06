@@ -77,7 +77,7 @@ A full-stack web application for learning Russian and English through interactiv
 
 ### Admin Access
 - **URL**: `http://127.0.0.1:8000/admin`
-- **Default credentials**: `admin` / `admin123`
+- **Credentials**: username `admin`; set the password with `ADMIN_PASSWORD` in `.env` (if unset, a random one is printed in the server console when the database is first created)
 - ⚠️ **Important**: Change the admin password after first login for security
 
 ---
@@ -143,11 +143,24 @@ The application uses **SQLite** for data storage. The database file (`app.db`) i
 
 ## 🔐 Security Features
 
-- **Password Hashing**: SHA-256 encryption for all passwords
-- **Session Management**: Secure cookie-based authentication
+- **Password Hashing**: bcrypt (salted, deliberately slow); older SHA-256 accounts are upgraded on their next login
+- **Rate Limiting**: login/sign-up attempts per IP, and AI chat, quiz and voice requests per user
+- **XSS Protection**: AI replies and stored words are escaped before being shown on the page
+- **Session Management**: HttpOnly, SameSite cookies
 - **Session Expiry**: Auto-logout after 30 days of inactivity
 - **Data Isolation**: Each user's data is completely separate
-- **Admin Protection**: Separate authentication for admin panel
+- **Admin Protection**: Separate authentication; password set with `ADMIN_PASSWORD` in `.env`
+
+---
+
+## 🧪 Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Tests use a temporary database and a fake AI, so they never touch `app.db` or call OpenAI. They cover passwords and login, rate limits, the card parsers, the course content and progress, and a full chat lesson.
 
 ---
 

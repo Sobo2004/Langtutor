@@ -143,6 +143,8 @@ function updateMilaMuteUI() {
   if (!milaMuteBtn) return;
   milaMuteBtn.textContent = Mila.voice.muted ? '🔇' : '🔈';
   milaMuteBtn.title = Mila.voice.muted ? "Turn Mila's voice on" : 'Mute Mila';
+  milaMuteBtn.setAttribute('aria-label', milaMuteBtn.title);
+  milaMuteBtn.setAttribute('aria-pressed', String(Mila.voice.muted));
 }
 
 Mila.onTalking(on => setMilaStatus(on ? 'speaking' : 'online'));
@@ -164,6 +166,9 @@ function botHTML(text) {
   // Word/example cards (always last) are rendered separately by lesson-flow.js — hide
   // them, including while they are still streaming in
   let t = text.replace(/\[\[(WORD|EXAMPLE|GRAMMAR|BUILD)[\s\S]*$/, '').trimEnd();
+  // Security: the AI's reply is untrusted text, so escape it first. Only the tags
+  // added below (<strong>, speaker buttons, <br>) end up as real HTML.
+  t = escapeHtml(t);
   // Strip TTS markers
   t = t.replace(/\[SPEAK:[^\]]+\]/g, '');
   // Strip ### headings
@@ -178,16 +183,14 @@ function botHTML(text) {
     var isLabel = BOT_LABELS.indexOf(w.trim().toLowerCase().replace(/:$/, '')) >= 0;
     if (isLabel) return '<strong>' + w + '</strong>';
     var lang = /[А-Яа-яЁё]/.test(w) ? 'ru' : 'en';
-    var safe = w.replace(/"/g, '&quot;');
-    return '<strong>' + w + '</strong><button class="spk-btn" data-word="' + safe + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button>';
+    return '<strong>' + w + '</strong><button class="spk-btn" data-word="' + w + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button>';
   });
 
   // Make speaker icons in example sentences clickable
   // Pattern: "Example: [sentence] — [translation]" (emojis already removed above)
   t = t.replace(/Example:\s*(.+?)\s*(—)/g, function(_, sentence, dash) {
     var lang = /[А-Яа-яЁё]/.test(sentence) ? 'ru' : 'en';
-    var safe = sentence.trim().replace(/"/g, '&quot;');
-    return 'Example: ' + sentence + ' <button class="spk-btn" data-word="' + safe + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button> ' + dash;
+    return 'Example: ' + sentence + ' <button class="spk-btn" data-word="' + sentence.trim() + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button> ' + dash;
   });
 
   // newlines to <br>
@@ -253,6 +256,10 @@ async function sendMessage(textOverride, intent, topic) {
       if (response.status === 401) {
         addMessage("Session expired. Please login again.", "bot");
         setTimeout(() => { window.location.reload(); }, 2000);
+        return;
+      }
+      if (response.status === 429) {
+        addMessage("You're going a little fast! Give me a few seconds and try again. ⏳", "bot");
         return;
       }
       throw new Error('Chat request failed');
@@ -575,7 +582,7 @@ window.checkOnboarding = async function checkOnboarding() {
         const savedAvatar = localStorage.getItem('userAvatar') || '👤';
         const preview = document.getElementById('onboardingAvatarPreview');
         if (preview) {
-          preview.innerHTML = `<span>${savedAvatar}</span>`;
+          preview.replaceChildren(Object.assign(document.createElement('span'), { textContent: savedAvatar }));
         }
         selectedOnboardingAvatar = savedAvatar;
 
@@ -651,7 +658,7 @@ window.saveOnboardingAvatar = function() {
   if (selectedOnboardingAvatar) {
     localStorage.setItem('userAvatar', selectedOnboardingAvatar);
     const preview = document.getElementById('onboardingAvatarPreview');
-    preview.innerHTML = `<span>${selectedOnboardingAvatar}</span>`;
+    preview.replaceChildren(Object.assign(document.createElement('span'), { textContent: selectedOnboardingAvatar }));
     closeOnboardingAvatarPicker();
     console.log('✅ Avatar selected:', selectedOnboardingAvatar);
   }
@@ -888,16 +895,20 @@ function renderRecapQuestion() {
 
     <p style="font-size:16px;margin:12px 0 14px;color:rgba(255,255,255,0.95);">${escapeHtml(q.prompt || "Pick the correct answer")}</p>
 
-    <div class="recap-options">
-      ${(q.options || []).map(opt => `
-        <button class="recap-option" onclick="answerRecap('${opt.replace(/'/g, "\\'")}')">
-          ${escapeHtml(opt)}
-        </button>
-      `).join("")}
-    </div>
+    <div class="recap-options"></div>
   `;
 
-  document.getElementById("recapContent").innerHTML = html;
+  const content = document.getElementById("recapContent");
+  content.innerHTML = html;
+  // Options are built as elements (not HTML strings) so their text can never run as code
+  const box = content.querySelector(".recap-options");
+  (q.options || []).forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "recap-option";
+    btn.textContent = opt;
+    btn.addEventListener("click", () => answerRecap(opt));
+    box.appendChild(btn);
+  });
 }
 
 window.answerRecap = function answerRecap(selected) {
@@ -1018,3 +1029,36 @@ function escapeHtml(str) {
   check();
   setInterval(check, 60000);
 })();
+
+// ========== MOBILE MENU + KEYBOARD ACCESS ==========
+(function mobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('menuBtn');
+  if (!sidebar || !btn) return;
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sidebar-backdrop';
+  backdrop.hidden = true;
+  document.body.appendChild(backdrop);
+
+  function setOpen(open) {
+    sidebar.classList.toggle('open', open);
+    backdrop.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    if (open) sidebar.querySelector('button, a, [tabindex="0"]')?.focus();
+  }
+  btn.addEventListener('click', () => setOpen(!sidebar.classList.contains('open')));
+  backdrop.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) { setOpen(false); btn.focus(); }
+  });
+  // Picking a course topic on a phone closes the menu so the lesson is visible
+  sidebar.addEventListener('click', e => {
+    if (e.target.closest('.course-topic') && window.matchMedia('(max-width: 768px)').matches) setOpen(false);
+  });
+})();
+
+// The language switch is a styled div: make Enter/Space work like a button
+document.getElementById('tourLanguage')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLanguage(); }
+});

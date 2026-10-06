@@ -565,9 +565,11 @@
   const roleOf = p => (ROLES.includes(p && p.role) ? p.role : "other");
   const sentenceOf = parts => parts.map(p => p.t).join(" ").replace(/\s+([.,!?])/g, "$1");
 
-  function block(part) {
-    const b = el("span", "block role-" + roleOf(part), part.t);
+  function block(part, tag = "span") {
+    const b = el(tag, "block role-" + roleOf(part), part.t);
     b.title = t().roles[roleOf(part)];
+    // Colour isn't the only clue: screen readers hear the part of speech too
+    b.setAttribute("aria-label", `${part.t} (${t().roles[roleOf(part)]})`);
     return b;
   }
 
@@ -708,7 +710,8 @@
       order = order.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
     }
     const tiles = order.map(i => {
-      const b = block(parts[i]);
+      const b = block(parts[i], "button");   // a real button: works with Tab + Enter/Space
+      b.type = "button";
       b.dataset.i = i;
       b.classList.add("tile");
       b.onclick = () => {

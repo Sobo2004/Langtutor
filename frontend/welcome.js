@@ -153,7 +153,13 @@ function buildListenQuiz() {
   all.forEach(function(w, i) {
     var btn       = document.createElement('button');
     btn.className = 'listen-opt';
-    btn.innerHTML = '<span class="listen-num">' + (i + 1) + '</span><span class="listen-word">' + w.russian + '</span>';
+    var num = document.createElement('span');
+    num.className = 'listen-num';
+    num.textContent = i + 1;
+    var word = document.createElement('span');
+    word.className = 'listen-word';
+    word.textContent = w.russian;   // text, never HTML: words come from the database
+    btn.append(num, word);
     btn.addEventListener('click', function() { handleListenAnswer(btn, w); });
     grid.appendChild(btn);
   });

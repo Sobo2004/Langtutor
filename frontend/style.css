@@ -1472,3 +1472,48 @@ footer button:hover {
   border: none; border-radius: 8px; padding: 6px 12px; font-weight: 700; cursor: pointer;
   background: #58cc02; color: #fff;
 }
+
+
+/* ===== Keyboard focus: always visible ===== */
+:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+button.block.tile { border: none; font-family: inherit; }
+
+/* ===== Mobile: the sidebar becomes a slide-out menu ===== */
+.menu-btn {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border: none; border-radius: 10px;
+  background: #f3f4ff; font-size: 20px; cursor: pointer; flex-shrink: 0;
+}
+.sidebar-backdrop { position: fixed; inset: 0; background: rgba(20, 16, 50, 0.45); z-index: 1400; }
+
+@media (max-width: 768px) {
+  .app { height: 100dvh; }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; width: 280px; max-width: 85vw; z-index: 1500;
+    transform: translateX(-100%); transition: transform 0.25s ease; overflow-y: auto;
+  }
+  .sidebar.open { transform: none; box-shadow: 8px 0 30px rgba(0,0,0,0.3); }
+  .menu-btn { display: inline-flex; }
+  .chat { width: 100%; min-width: 0; }
+
+  header { gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+  .mila-header { gap: 8px; flex: 1; min-width: 0; }
+  .mila-header .mila-face { width: 42px; height: 42px; }
+  .mila-header h2 { font-size: 18px; }
+  .mila-header-right { gap: 6px; }
+  .mila-header-right .badge { display: none; }
+  .round-progress { min-width: 0; width: 100%; order: 3; }
+  .mila-header-right:has(.round-progress:not([hidden])) { width: 100%; }
+
+  .messages { padding: 12px; }
+  .message { max-width: 88%; }
+  .messages .message.bot { margin-left: 40px; }
+  .messages .message.bot::before { left: -40px; width: 32px; height: 32px; }
+  .message.bot.word-card, .message.bot.grammar-card, .message.bot.builder, .message.bot.example-card { min-width: 0; max-width: calc(100% - 40px); }
+  .reply-chips { margin-left: 40px; }
+  .wc-word { font-size: 22px; }
+
+  footer { gap: 6px; padding: 8px; }
+  footer input { min-width: 0; }
+  footer button { min-width: 0; padding: 10px 12px; }
+}

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, Cookie, HTTPException
+from fastapi import FastAPI, Response, Cookie, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 from openai import OpenAI
 
-import os, json, httpx, sqlite3, uuid, random, hashlib
+import os, json, httpx, sqlite3, uuid, random, hashlib, secrets, hmac
+import bcrypt
 from typing import Optional, Generator
 from datetime import date, timedelta, datetime
 import re
@@ -570,7 +571,7 @@ def favicon():
     return FileResponse(FRONTEND_DIR / "favicon.ico")
 
 # ---------------- DB ----------------
-DB_PATH = BASE_DIR / "app.db"
+DB_PATH = Path(os.getenv("LANGTUTOR_DB", str(BASE_DIR / "app.db")))  # tests use a temporary database
 
 def db():
     con = sqlite3.connect(str(DB_PATH))
@@ -578,7 +579,53 @@ def db():
     return con
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+    """bcrypt: salted and deliberately slow, so leaked hashes are hard to crack."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("ascii")
+
+def verify_password(password: str, stored: str):
+    """Returns (matches, needs_upgrade). Accounts created before bcrypt stored an
+    unsalted SHA-256 hash (or, earlier still, plain text); those still log in and are
+    upgraded to bcrypt on their next successful login."""
+    stored = stored or ""
+    if stored.startswith("$2"):
+        try:
+            return bcrypt.checkpw(password.encode("utf-8"), stored.encode("ascii")), False
+        except ValueError:
+            return False, False
+    legacy_sha = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    ok = hmac.compare_digest(stored, legacy_sha) or hmac.compare_digest(stored, password)
+    return ok, ok
+
+# ---------------- RATE LIMITS ----------------
+# Sliding-window limits kept in memory (per server process). They stop one user from
+# running up the OpenAI bill and slow down password guessing.
+RATE_LIMITS = {
+    "auth": (10, 60),     # sign-up / login / password reset attempts per IP per minute
+    "chat": (20, 60),     # messages to Mila per user per minute
+    "quiz": (40, 60),     # quiz batches per user per minute (one quiz = up to 8 batches)
+    "tts": (150, 60),     # voice clips per user per minute (a grammar lesson can need ~30)
+}
+_rate_hits: dict = {}
+
+def rate_limit(bucket: str, key: str):
+    limit, window = RATE_LIMITS[bucket]
+    now = datetime.now().timestamp()
+    hits = [t for t in _rate_hits.get((bucket, key), []) if now - t < window]
+    if len(hits) >= limit:
+        retry = int(window - (now - hits[0])) + 1
+        raise HTTPException(status_code=429, detail="Too many requests, please slow down.",
+                            headers={"Retry-After": str(retry)})
+    hits.append(now)
+    _rate_hits[(bucket, key)] = hits
+
+def client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+def check_password_rules(password: str):
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    if len(password.encode("utf-8")) > 72:   # bcrypt's limit
+        raise HTTPException(status_code=400, detail="Password is too long (max 72 bytes)")
 
 def init_db():
     con = db()
@@ -638,13 +685,20 @@ def init_db():
         used INTEGER DEFAULT 0
     );
     """)
-    existing_admin = con.execute("SELECT 1 FROM admins LIMIT 1").fetchone()
+    # Admin password comes from ADMIN_PASSWORD in .env. Without it, a random one is
+    # generated for a new database and printed once to the server console.
+    env_admin_password = os.getenv("ADMIN_PASSWORD", "").strip()
+    existing_admin = con.execute("SELECT id, password FROM admins WHERE username='admin'").fetchone()
     if not existing_admin:
-        admin_id = str(uuid.uuid4())
-        admin_password = hash_password("admin123")
-        today = date.today().isoformat()
+        admin_password = env_admin_password or secrets.token_urlsafe(12)
+        if not env_admin_password:
+            print(f"\n*** Admin account created: username 'admin', password '{admin_password}'. "
+                  f"Set ADMIN_PASSWORD in .env to choose your own. ***\n")
         con.execute("INSERT INTO admins(id, username, password, created_at) VALUES(?,?,?,?)",
-                    (admin_id, "admin", admin_password, today))
+                    (str(uuid.uuid4()), "admin", hash_password(admin_password), date.today().isoformat()))
+    elif env_admin_password and not verify_password(env_admin_password, existing_admin["password"])[0]:
+        # ADMIN_PASSWORD changed in .env: apply it
+        con.execute("UPDATE admins SET password=? WHERE id=?", (hash_password(env_admin_password), existing_admin["id"]))
     con.commit()
     con.close()
 
@@ -667,12 +721,14 @@ class LoginRequest(BaseModel):
     password: str
 
 @app.post("/auth/signup")
-def signup(req: SignupRequest):
+def signup(req: SignupRequest, request: Request):
+    rate_limit("auth", client_ip(request))
     con = db()
     try:
         existing = con.execute("SELECT 1 FROM users WHERE username=?", (req.username,)).fetchone()
         if existing:
             raise HTTPException(status_code=400, detail="Username already exists")
+        check_password_rules(req.password)
 
         user_id = str(uuid.uuid4())
         password_hash = hash_password(req.password)
@@ -693,15 +749,12 @@ def signup(req: SignupRequest):
         con.close()
 
 @app.post("/auth/login")
-def login(req: LoginRequest, response: Response):
-    """
-    ✅ FIX: Support both hashed passwords AND legacy plaintext passwords.
-    If legacy plaintext matches, we auto-migrate to sha256 hash.
-    """
+def login(req: LoginRequest, response: Response, request: Request):
+    """Checks the password with bcrypt; older SHA-256/plain-text accounts are
+    upgraded to bcrypt on a successful login."""
+    rate_limit("auth", client_ip(request))
     con = db()
     try:
-        password_hash = hash_password(req.password)
-
         user = con.execute(
             "SELECT id, username, password FROM users WHERE username=?",
             (req.username,)
@@ -710,17 +763,9 @@ def login(req: LoginRequest, response: Response):
         if not user:
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
-        stored = user["password"] or ""
-
-        # Accept hashed OR plaintext (legacy)
-        if stored == password_hash:
-            ok = True
-        elif stored == req.password:
-            ok = True
-            # migrate plaintext -> hash
-            con.execute("UPDATE users SET password=? WHERE id=?", (password_hash, user["id"]))
-        else:
-            ok = False
+        ok, needs_upgrade = verify_password(req.password, user["password"])
+        if ok and needs_upgrade:
+            con.execute("UPDATE users SET password=? WHERE id=?", (hash_password(req.password), user["id"]))
 
         if not ok:
             raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -775,7 +820,8 @@ class ResendOTPRequest(BaseModel):
     purpose: str = "forgot_password"
 
 @app.post("/auth/forgot-password")
-def forgot_password(req: ForgotPasswordRequest):
+def forgot_password(req: ForgotPasswordRequest, request: Request):
+    rate_limit("auth", client_ip(request))
     email = req.email.strip().lower()
     con = db()
     user = con.execute("SELECT id FROM users WHERE LOWER(email)=?", (email,)).fetchone()
@@ -824,7 +870,8 @@ def forgot_password(req: ForgotPasswordRequest):
     return {"success": True, "message": "Code sent."}
 
 @app.post("/auth/resend-otp")
-def resend_otp(req: ResendOTPRequest):
+def resend_otp(req: ResendOTPRequest, request: Request):
+    rate_limit("auth", client_ip(request))
     email = req.email.strip().lower()
     con = db()
     user = con.execute("SELECT id FROM users WHERE LOWER(email)=?", (email,)).fetchone()
@@ -836,7 +883,8 @@ def resend_otp(req: ResendOTPRequest):
     return forgot_password(ForgotPasswordRequest(email=email))
 
 @app.post("/auth/reset-password")
-def reset_password(req: ResetPasswordRequest):
+def reset_password(req: ResetPasswordRequest, request: Request):
+    rate_limit("auth", client_ip(request))
     email = req.email.strip().lower()
     code  = req.code.strip()
 
@@ -861,6 +909,7 @@ def reset_password(req: ResetPasswordRequest):
         con.close()
         raise HTTPException(status_code=400, detail="Code has expired. Please request a new one.")
 
+    check_password_rules(req.new_password)
     new_hash = hash_password(req.new_password)
     con.execute("UPDATE users SET password=? WHERE LOWER(email)=?", (new_hash, email))
     con.execute("UPDATE password_reset_otps SET used=1 WHERE email=? AND code=?", (email, code))
@@ -1300,6 +1349,7 @@ def chat_stream(req: ChatRequest, response: Response, session_id: Optional[str]=
         u = get_user(user_id)
         if not u:
             raise HTTPException(status_code=404, detail="User not found")
+        rate_limit("chat", user_id)
 
         state = get_lesson_state(user_id)
         user_msg = (req.message or "").strip()
@@ -2081,17 +2131,18 @@ class AdminLoginRequest(BaseModel):
     password: str
 
 @app.post("/admin/login")
-def admin_login(req: AdminLoginRequest, response: Response):
+def admin_login(req: AdminLoginRequest, response: Response, request: Request):
+    rate_limit("auth", client_ip(request))
     con = db()
     try:
-        password_hash = hash_password(req.password)
         admin = con.execute(
-            "SELECT id, username FROM admins WHERE username=? AND password=?",
-            (req.username, password_hash)
+            "SELECT id, username, password FROM admins WHERE username=?", (req.username,)
         ).fetchone()
-        
-        if not admin:
+        ok, needs_upgrade = verify_password(req.password, admin["password"]) if admin else (False, False)
+        if not ok:
             raise HTTPException(status_code=401, detail="Invalid credentials")
+        if needs_upgrade:
+            con.execute("UPDATE admins SET password=? WHERE id=?", (hash_password(req.password), admin["id"]))
         
         admin_session_id = str(uuid.uuid4())
         today = date.today().isoformat()
@@ -2461,6 +2512,7 @@ def api_quiz_generate(req: QuizGenerateRequest, session_id: Optional[str] = Cook
     user_id = get_user_from_session(session_id)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid session")
+    rate_limit("quiz", user_id)
 
     language_mode = (req.language_mode or "ru-en").strip().lower()
     if language_mode not in ("ru-en", "en-ru"):
@@ -2533,8 +2585,10 @@ class TTSRequest(BaseModel):
 @app.post("/api/tts")
 def api_tts(req: TTSRequest, session_id: Optional[str] = Cookie(default=None)):
     """Speak text with OpenAI TTS. Audio is cached on disk so repeated phrases are free."""
-    if not session_id or not get_user_from_session(session_id):
+    user_id = get_user_from_session(session_id) if session_id else None
+    if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    rate_limit("tts", user_id)
     if LLM_PROVIDER != "openai" or not OPENAI_API_KEY:
         raise HTTPException(status_code=503, detail="TTS not configured")
 

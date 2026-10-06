@@ -83,7 +83,8 @@
     const el = document.querySelector(step.target);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    return r.width && r.height ? el : null; // hidden (e.g. on small screens) — skip
+    // Hidden or off screen (e.g. inside the closed mobile menu) — skip this step
+    return r.width && r.height && r.right > 0 && r.left < window.innerWidth ? el : null;
   }
 
   function go(i, dir = 1) {
