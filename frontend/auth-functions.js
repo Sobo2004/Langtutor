@@ -270,7 +270,7 @@ async function resendOTP() {
     if (res.ok) {
       clearOTP('otp');
       document.getElementById('otpError').textContent = '';
-      alert('✉️ New code sent!');
+      alert('A new code has been sent to your email.');
       startCountdown('btnResendOTP', 'resendTimer', 30);
     }
   } catch (err) {
@@ -317,7 +317,7 @@ async function handleLogin(username, password) {
   }
 }
 
-// ✅ Immediately start onboarding/recap flow after login
+// Immediately start onboarding/recap flow after login
 if (window.startPostLoginFlow) {
   window.startPostLoginFlow();
 } else {
@@ -377,7 +377,7 @@ async function sendResetCode() {
       if (data.dev_code) {
         const notice = document.getElementById('devCodeNotice');
         if (notice) {
-          notice.textContent = `⚙️ Dev mode — your code is: ${data.dev_code}`;
+          notice.textContent = `Dev mode — your code is: ${data.dev_code}`;
           notice.style.display = 'block';
         }
       }
@@ -453,7 +453,7 @@ async function resendResetCode() {
     if (res.ok) {
       clearOTP('reset');
       document.getElementById('forgotError2').textContent = '';
-      alert('✉️ New code sent!');
+      alert('A new code has been sent to your email.');
       startCountdown('btnResendReset', 'resetTimer', 30);
     }
   } catch (err) {

@@ -141,7 +141,7 @@
 <!-- ============ LOGIN ============ -->
 <div id="loginPage">
   <div class="login-box">
-    <h1>🔐 Admin Login</h1>
+    <h1>Admin Login</h1>
     <div class="error" id="loginError"></div>
     <div class="form-group">
       <label>Username</label>
@@ -156,30 +156,29 @@
 </div>
 
 <!-- Success Toast -->
-<div id="loginSuccessToast" style="display:none;position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;font-weight:600;animation:slideIn 0.3s ease;">
-  ✅ Login successful!
+<div id="loginSuccessToast" style="display:none;position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;font-weight:600;animation:slideIn 0.3s ease;">Login successful!
 </div>
 
 <!-- ============ ADMIN PANEL ============ -->
 <div id="adminPanel">
   <div class="admin-header">
-    <h1>📚 LangTutor — Admin Panel</h1>
+    <h1>LangTutor — Admin Panel</h1>
     <button class="logout-btn" id="logoutBtn">Logout</button>
   </div>
   <div class="admin-content">
     <div class="stats-grid">
-      <div class="stat-card"><div class="icon">👥</div><h3>Total Users</h3><div class="value" id="totalUsers">0</div></div>
-      <div class="stat-card"><div class="icon">💬</div><h3>Total Messages</h3><div class="value" id="totalMessages">0</div></div>
-      <div class="stat-card"><div class="icon">⭐</div><h3>Total XP Earned</h3><div class="value" id="totalXP">0</div></div>
-      <div class="stat-card"><div class="icon">🔥</div><h3>Active Today</h3><div class="value" id="activeToday">0</div></div>
+      <div class="stat-card"><h3>Total Users</h3><div class="value" id="totalUsers">0</div></div>
+      <div class="stat-card"><h3>Total Messages</h3><div class="value" id="totalMessages">0</div></div>
+      <div class="stat-card"><h3>Total XP Earned</h3><div class="value" id="totalXP">0</div></div>
+      <div class="stat-card"><h3>Active Today</h3><div class="value" id="activeToday">0</div></div>
     </div>
     <div class="section">
-      <h2>📊 Quiz Performance Comparison</h2>
+      <h2>Quiz Performance Comparison</h2>
       <canvas id="quizChart" style="max-height:300px;"></canvas>
     </div>
 
     <div class="section">
-      <h2>👥 All Users</h2>
+      <h2>All Users</h2>
       <div style="overflow-x:auto;">
         <table style="min-width:1200px;">
           <thead>
@@ -330,7 +329,7 @@
           '<td><span class="badge badge-warning">'+(u.study_level||u.level||'A1')+'</span></td>'+
           '<td style="text-align:center;">'+(u.daily_goal||10)+' min</td>'+
           '<td><span class="badge badge-success">'+u.xp+' XP</span></td>'+
-          '<td style="text-align:center;">'+u.streak+' 🔥</td>'+
+          '<td style="text-align:center;">'+u.streak+' days</td>'+
           '<td style="text-align:center;">'+(u.total_quizzes||0)+'</td>'+
           '<td style="text-align:center;font-weight:600;color:'+(u.avg_quiz_score >= 80 ? '#28a745' : u.avg_quiz_score >= 60 ? '#ffc107' : '#dc3545')+';">'+(u.avg_quiz_score||0)+'%</td>'+
           '<td style="text-align:center;">'+(u.best_quiz_score||0)+'%</td>'+
@@ -428,18 +427,18 @@
           '<h3 style="margin:0;">'+u.username+'</h3>'+
         '</div>'+
         '<div style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:15px;">'+
-          '<h4 style="margin:0 0 10px 0;color:#667eea;">📚 Learning Profile</h4>'+
+          '<h4 style="margin:0 0 10px 0;color:#667eea;">Learning Profile</h4>'+
           '<p style="margin:5px 0;"><strong>Why Learning:</strong> '+(u.study_reason||'N/A')+'</p>'+
           '<p style="margin:5px 0;"><strong>Study Goal:</strong> '+(u.study_goal||'N/A')+'</p>'+
           '<p style="margin:5px 0;"><strong>Current Level:</strong> '+(u.study_level||u.level||'A1')+'</p>'+
           '<p style="margin:5px 0;"><strong>Daily Goal:</strong> '+(u.daily_goal||10)+' minutes</p>'+
         '</div>'+
         '<div style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:15px;">'+
-          '<h4 style="margin:0 0 10px 0;color:#667eea;">📊 Stats</h4>'+
+          '<h4 style="margin:0 0 10px 0;color:#667eea;">Stats</h4>'+
           '<p style="margin:5px 0;"><strong>Email:</strong> '+(u.email||'N/A')+'</p>'+
           '<p style="margin:5px 0;"><strong>XP:</strong> '+u.xp+'</p>'+
           '<p style="margin:5px 0;"><strong>Proficiency Level:</strong> '+u.level+'</p>'+
-          '<p style="margin:5px 0;"><strong>Streak:</strong> '+u.streak+' 🔥</p>'+
+          '<p style="margin:5px 0;"><strong>Streak:</strong> '+u.streak+' days</p>'+
           '<p style="margin:5px 0;"><strong>Created:</strong> '+u.created_at+'</p>'+
           '<p style="margin:5px 0;"><strong>Last Active:</strong> '+u.last_active+'</p>'+
         '</div>';

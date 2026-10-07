@@ -44,3 +44,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mila-face, .mila-face * { animation: none !important; }
 }
+
+/* Line icons (mila.js: Mila.icon / data-icon) */
+.icon { width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex-shrink: 0; }
+.icon-heart { color: #ff4b4b; }

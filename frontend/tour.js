@@ -2,13 +2,13 @@
  * Website tour — Mila shows new users around the chat page.
  * Starts automatically for users who finished onboarding but haven't
  * completed/skipped the tour yet (saved on their account, so it works on
- * any device); "🧭 Take the tour" in the sidebar replays it.
+ * any device); "Take the tour" in the sidebar replays it.
  *******************************************************/
 (function () {
   // target: CSS selector to spotlight (null = centred card)
   const STEPS = {
     "en-ru": [
-      { target: null, title: "Hi, I'm Mila! 👋", text: "I'm your Russian tutor. Let me show you around. It only takes a minute." },
+      { target: null, title: "Hi, I'm Mila!", text: "I'm your Russian tutor. Let me show you around. It only takes a minute." },
       { target: ".mila-header", title: "Chat with me", text: "This is where we talk. I teach you one word at a time, then we practise it together." },
       { target: "#messageInput", title: "Type here", text: "Write to me in English or Russian. Try \"teach me greetings\" to get started." },
       { target: "#voiceBtn", title: "Speak", text: "Tap the mic and say it out loud. Great for practising pronunciation." },
@@ -19,10 +19,10 @@
       { target: "#tourLanguage", title: "Switch language", text: "Learning English instead? Switch the direction here." },
       { target: "#tourExplore", title: "Explore", text: "See your progress, compete on the leaderboard, and take quizzes on the words you've learnt with me." },
       { target: "#usernameDisplay", title: "Your profile", text: "Change your avatar and see your stats here." },
-      { target: null, title: "You're ready! 🎉", text: "Let's learn your first word together. Just say hi!", last: true }
+      { target: null, title: "You're ready!", text: "Let's learn your first word together. Just say hi!", last: true }
     ],
     "ru-en": [
-      { target: null, title: "Привет, я Мила! 👋", text: "Я твой репетитор английского. Давай я покажу, что здесь есть. Это займёт минуту." },
+      { target: null, title: "Привет, я Мила!", text: "Я твой репетитор английского. Давай я покажу, что здесь есть. Это займёт минуту." },
       { target: ".mila-header", title: "Чат со мной", text: "Здесь мы общаемся. Я учу тебя по одному слову, а потом мы вместе практикуемся." },
       { target: "#messageInput", title: "Пиши здесь", text: "Пиши мне по-русски или по-английски. Начни с «научи меня приветствиям»." },
       { target: "#voiceBtn", title: "Говори", text: "Нажми на микрофон и скажи вслух. Отлично для тренировки произношения." },
@@ -33,7 +33,7 @@
       { target: "#tourLanguage", title: "Смена языка", text: "Хочешь учить русский? Переключи направление здесь." },
       { target: "#tourExplore", title: "Разделы", text: "Смотри прогресс, соревнуйся в рейтинге и проходи тесты по словам, которые мы выучили." },
       { target: "#usernameDisplay", title: "Твой профиль", text: "Здесь можно сменить аватар и посмотреть статистику." },
-      { target: null, title: "Всё готово! 🎉", text: "Давай выучим первое слово вместе. Просто поздоровайся!", last: true }
+      { target: null, title: "Всё готово!", text: "Давай выучим первое слово вместе. Просто поздоровайся!", last: true }
     ]
   };
 

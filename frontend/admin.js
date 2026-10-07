@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-console.log('✅ admin.js v2 loaded — ' + new Date().toLocaleTimeString());
+console.log('admin.js v2 loaded — ' + new Date().toLocaleTimeString());
 checkAdminAuth();
 
 async function checkAdminAuth() {
@@ -111,7 +111,7 @@ async function loadUsers() {
         '<td>' + (user.email || 'N/A') + '</td>' +
         '<td><span class="badge badge-success">' + user.xp + ' XP</span></td>' +
         '<td><span class="badge badge-warning">' + user.level + '</span></td>' +
-        '<td>' + user.streak + ' 🔥</td>' +
+        '<td>' + user.streak + ' days</td>' +
         '<td>' + (user.last_active || 'Never') + '</td>' +
         '<td>' +
           '<button class="action-btn btn-view"  onclick="viewUser(\'' + user.id + '\')">View</button>' +
@@ -137,7 +137,7 @@ async function viewUser(userId) {
       '<p><strong>Email:</strong> ' + (user.email || 'N/A') + '</p>' +
       '<p><strong>XP:</strong> ' + user.xp + '</p>' +
       '<p><strong>Level:</strong> ' + user.level + '</p>' +
-      '<p><strong>Streak:</strong> ' + user.streak + ' days 🔥</p>' +
+      '<p><strong>Streak:</strong> ' + user.streak + ' days</p>' +
       '<p><strong>Created:</strong> ' + user.created_at + '</p>' +
       '<p><strong>Last Active:</strong> ' + user.last_active + '</p>';
 

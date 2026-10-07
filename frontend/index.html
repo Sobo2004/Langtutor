@@ -170,7 +170,7 @@
 <!-- Login Page -->
 <div class="auth-wrapper active" id="loginPage">
   <div class="auth-container">
-    <h1>📚 LangTutor</h1>
+    <h1>LangTutor</h1>
     <p class="subtitle-auth">Login to your account</p>
     <div class="error-message" id="loginError"></div>
     <form id="loginForm">
@@ -195,7 +195,7 @@
 </div>
 <div class="auth-wrapper" id="signupPage">
   <div class="auth-container">
-    <h1>📚 LangTutor</h1>
+    <h1>LangTutor</h1>
     <p class="subtitle-auth">Create your account</p>
     <div class="error-message" id="signupError"></div>
     <form id="signupForm">
@@ -222,7 +222,7 @@
 <!-- Signup Success Modal -->
 <div class="modal" id="signupSuccessModal">
   <div class="modal-content" style="text-align:center;max-width:380px;padding:40px;">
-    <div style="font-size:64px;margin-bottom:16px;">✅</div>
+    
     <h3 style="margin-bottom:12px;">Account Created!</h3>
     <p class="modal-subtitle" style="margin-bottom:24px;font-size:14px;">Your account has been successfully created. You can now log in!</p>
     <button class="auth-btn" id="btnGoToLoginFromSignup">Go to Login</button>
@@ -231,7 +231,7 @@
 
 <!-- Login Success Toast -->
 <div id="loginSuccessToast" style="display:none;position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;font-weight:600;animation:slideInRight 0.3s ease;">
-  ✅ Login successful!
+  Login successful
 </div>
 
 <!-- Main App -->
@@ -240,12 +240,12 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-content">
-      <h1>📚 LangTutor</h1>
+      <h1>LangTutor</h1>
       <div class="language-toggle" id="tourLanguage" role="button" tabindex="0" aria-label="Switch the language you are learning" onclick="toggleLanguage()">
         <span id="langFrom">English</span>
         <span style="margin:0 6px;">→</span>
         <span id="langTo">Russian</span>
-        <span style="margin-left:8px;font-size:12px;opacity:0.7;">🔄</span>
+        <span data-icon="swap" style="margin-left:8px;font-size:12px;opacity:0.8;"></span>
       </div>
 
       <div id="tourProgress">
@@ -260,10 +260,10 @@
       </div>
 
       <div class="stats">
-        <div>🔥 <span id="streakDays">0</span><br/ data-i18n="streak">Day Streak</div>
-        <div>⭐ <span id="totalXP">0</span><br/ data-i18n="xp">Total XP</div>
-        <div>🎯 <span id="proficiencyLevel">A1</span><br/ data-i18n="proficiency_level">Level</div>
-        <div>📚 <span id="completedCount">0</span><br/ data-i18n="completed">Words</div>
+        <div><span id="streakDays">0</span><br/ data-i18n="streak">Day Streak</div>
+        <div><span id="totalXP">0</span><br/ data-i18n="xp">Total XP</div>
+        <div><span id="proficiencyLevel">A1</span><br/ data-i18n="proficiency_level">Level</div>
+        <div><span id="completedCount">0</span><br/ data-i18n="completed">Words</div>
       </div>
       </div>
 
@@ -274,12 +274,12 @@
 
       <div id="tourExplore">
       <h3 style="margin-top:18px;">Explore</h3>
-      <a href="/progress"   style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📈 My Progress</a>
-      <a href="/leaderboard" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">🏆 Leaderboard</a>
-      <a href="/quiz" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">📝 Quiz</a>
-      <a href="/api/export/words" id="exportWordsLink" download style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">⬇️ Download my words</a>
+      <a href="/progress"   style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">My Progress</a>
+      <a href="/leaderboard" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">Leaderboard</a>
+      <a href="/quiz" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">Quiz</a>
+      <a href="/api/export/words" id="exportWordsLink" download style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">Download my words</a>
       </div>
-      <a href="#" id="tourReplayLink" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">🧭 Take the tour</a>
+      <a href="#" id="tourReplayLink" style="display:block;color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;">Take the tour</a>
 
     </div>
 
@@ -296,7 +296,7 @@
   <main class="chat">
 
     <header>
-      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">☰</button>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false" data-icon="menu"></button>
       <div class="mila-header">
         <div class="mila-face" id="milaHeaderFace"></div>
         <div>
@@ -309,7 +309,7 @@
           <div class="round-label" id="roundLabel"></div>
           <div class="round-bar"><div class="round-fill" id="roundFill"></div></div>
         </div>
-        <button class="mila-mute" id="milaMuteBtn" type="button" title="Mute Mila">🔈</button>
+        <button class="mila-mute" id="milaMuteBtn" type="button" title="Mute Mila" data-icon="volume"></button>
         <span class="badge">Learning: 🇷🇺 Russian</span>
       </div>
     </header>
@@ -318,7 +318,7 @@
 
     <!-- QUIZ (HIDDEN BY DEFAULT) -->
     <div id="quiz" class="quiz hidden">
-      <h3>🧠 Quick Quiz</h3>
+      <h3>Quick Quiz</h3>
       <p id="quizQuestion"></p>
       <input id="quizInput" placeholder="Type your answer…" />
       <div class="quiz-actions">
@@ -329,9 +329,9 @@
 
     <!-- INPUT -->
     <footer>
-      <input id="messageInput" placeholder="Type your message or click 🎤 to speak…" aria-label="Message to Mila" />
-      <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input" aria-label="Speak your message">🎤</button>
-      <button id="listenBtn" onclick="speakLastMessage()" title="Listen to last message" aria-label="Hear the last word again">🔊</button>
+      <input id="messageInput" placeholder="Type a message, or tap the mic to speak…" aria-label="Message to Mila" />
+      <button id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input" aria-label="Speak your message" data-icon="mic"></button>
+      <button id="listenBtn" onclick="speakLastMessage()" title="Listen to last message" aria-label="Hear the last word again" data-icon="speaker"></button>
       <button onclick="sendMessage()">Send</button>
     </footer>
 
@@ -354,7 +354,7 @@
 
     <!-- Screen 2: Quiz question -->
     <div class="popup-screen" id="screenQuiz">
-      <div class="popup-icon">🧠</div>
+      <div class="popup-icon"><img class="mila-img" src="/static/mila.svg" alt=""></div>
       <p class="popup-sub" style="margin-bottom:4px;">Quick recap</p>
       <h2 id="quizPrompt"></h2>
       <p class="popup-sub" id="quizHint" style="color:#888;margin-bottom:16px;"></p>
@@ -364,7 +364,7 @@
 
     <!-- Screen 3: All done -->
     <div class="popup-screen" id="screenDone">
-      <div class="popup-icon">🎉</div>
+      <div class="popup-icon"><img class="mila-img" src="/static/mila.svg" alt=""></div>
       <h2>You're all set!</h2>
       <p class="popup-sub">Great memory! Let's keep learning.</p>
       <button class="popup-btn" id="btnContinue">Continue learning</button>
@@ -379,12 +379,12 @@
         <div class="mascot"><img class="mila-img" src="/static/mila.svg" alt="Mila"></div>
       </div>
       <div class="onboard-options" id="onboardWhyOptions">
-        <button class="onboard-opt" data-val="career">💼 Boost my career</button>
-        <button class="onboard-opt" data-val="people">🤝 Connect with people</button>
-        <button class="onboard-opt" data-val="fun">🎉 Just for fun</button>
-        <button class="onboard-opt" data-val="productive">🧠 Spend time productively</button>
-        <button class="onboard-opt" data-val="travel">✈️ Prepare for travel</button>
-        <button class="onboard-opt" data-val="education">📖 Support my education</button>
+        <button class="onboard-opt" data-val="career">Boost my career</button>
+        <button class="onboard-opt" data-val="people">Connect with people</button>
+        <button class="onboard-opt" data-val="fun">Just for fun</button>
+        <button class="onboard-opt" data-val="productive">Spend time productively</button>
+        <button class="onboard-opt" data-val="travel">Prepare for travel</button>
+        <button class="onboard-opt" data-val="education">Support my education</button>
       </div>
       <button class="onboard-continue" id="btnOnboard1Next" disabled>CONTINUE</button>
     </div>
@@ -430,7 +430,7 @@
     <!-- Step 4: Onboarding complete -->
     <div class="popup-screen" id="screenOnboard4">
       <div class="onboard-progress"><div class="onboard-progress-fill" style="width:100%"></div></div>
-      <div class="popup-icon" style="margin-top:24px;">🎉</div>
+      <div class="popup-icon" style="margin-top:24px;"><img class="mila-img" src="/static/mila.svg" alt=""></div>
       <h2>You're all set!</h2>
       <p class="popup-sub">Let's start your Russian learning journey.<br>One word at a time!</p>
       <button class="popup-btn" id="btnOnboardFinish">Start learning</button>
@@ -438,19 +438,19 @@
 
     <!-- Screen 5: Feedback question -->
     <div class="popup-screen" id="screenFeedback">
-      <div class="popup-icon">💬</div>
+      <div class="popup-icon"><img class="mila-img" src="/static/mila.svg" alt=""></div>
       <h2>How's it going?</h2>
       <p class="popup-sub">Are you enjoying learning Russian with Mila?</p>
       <div class="popup-feedback-btns">
-        <button class="popup-fb-btn fb-love" id="btnLove">😍 Love it!</button>
-        <button class="popup-fb-btn fb-good" id="btnGood">👍 It's good</button>
-        <button class="popup-fb-btn fb-meh" id="btnMeh">😐 It's okay</button>
+        <button class="popup-fb-btn fb-love" id="btnLove">Love it!</button>
+        <button class="popup-fb-btn fb-good" id="btnGood">It's good</button>
+        <button class="popup-fb-btn fb-meh" id="btnMeh">It's okay</button>
       </div>
     </div>
 
     <!-- Screen 6: Thanks for feedback -->
     <div class="popup-screen" id="screenThanks">
-      <div class="popup-icon" id="thankIcon">😊</div>
+      <div class="popup-icon" id="thankIcon"><img class="mila-img" src="/static/mila.svg" alt=""></div>
       <h2>Thanks for telling us!</h2>
       <p class="popup-sub" id="thankMsg">We'll keep improving for you.</p>
       <button class="popup-btn" id="btnFinish">Start learning</button>
@@ -462,10 +462,10 @@
 <!-- Time's Up Popup -->
 <div class="popup-overlay" id="timeUpPopup">
   <div class="popup-card" style="text-align:center;max-width:400px;">
-    <div style="font-size:64px;margin-bottom:12px;">⏰</div>
+    <div style="margin-bottom:12px;"><img class="mila-img" src="/static/mila.svg" alt=""></div>
     <h2 style="font-size:26px;margin-bottom:8px;">Time's up for today!</h2>
     <p class="popup-sub" style="margin-bottom:20px;">
-      You've reached your daily goal of <strong id="goalMinutesDisplay">10</strong> minutes. Great work! 🎉
+      You've reached your daily goal of <strong id="goalMinutesDisplay">10</strong> minutes. Great work!
     </p>
     <p class="popup-sub" style="color:#888;font-size:13px;margin-bottom:20px;">
       Taking breaks helps you learn better. Come back tomorrow to continue!
@@ -478,7 +478,7 @@
 <!-- OTP Verification Modal -->
 <div class="modal" id="otpModal">
   <div class="modal-content" style="max-width:450px;">
-    <h3 style="margin:0 0 8px;font-size:24px;">✉️ Verify Your Email</h3>
+    <h3 style="margin:0 0 8px;font-size:24px;">Verify Your Email</h3>
     <p style="color:#666;font-size:14px;margin-bottom:24px;">Enter the 6-digit code sent to <strong id="otpEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7c0513090e3c19111d1510521f1311">[email&#160;protected]</a></strong></p>
     <div class="otp-input-group">
       <input type="text" maxlength="1" class="otp-box" id="otp1" />
@@ -499,7 +499,7 @@
   <div class="modal-content" style="max-width:450px;">
     <button class="modal-close" id="closeForgotPassword">&times;</button>
     <div class="forgot-step active" id="forgotStep1">
-      <h3 style="margin:0 0 8px;font-size:24px;">🔒 Reset Password</h3>
+      <h3 style="margin:0 0 8px;font-size:24px;">Reset Password</h3>
       <p style="color:#666;font-size:14px;margin-bottom:24px;">Enter your email and we'll send you a code</p>
       <div class="form-group">
         <label data-i18n="email">Email</label>
@@ -509,7 +509,7 @@
       <button class="auth-btn" id="btnSendResetCode">Send Code</button>
     </div>
     <div class="forgot-step" id="forgotStep2">
-      <h3 style="margin:0 0 8px;font-size:24px;">🔑 Reset Password</h3>
+      <h3 style="margin:0 0 8px;font-size:24px;">Reset Password</h3>
       <p style="color:#666;font-size:14px;margin-bottom:8px;">Code sent to <strong id="forgotEmailDisplay"></strong></p>
       <div id="devCodeNotice" style="display:none;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:12px;"></div>
       <div class="form-group">
@@ -537,7 +537,7 @@
       <button class="resend-btn" id="btnResendReset" disabled>Resend (<span id="resetTimer">30</span>s)</button>
     </div>
     <div class="forgot-step" id="forgotStep3">
-      <div style="font-size:64px;margin-bottom:16px;text-align:center;">✅</div>
+      
       <h3 style="margin:0 0 8px;font-size:24px;text-align:center;">Password Reset!</h3>
       <p style="color:#666;font-size:14px;margin-bottom:24px;text-align:center;">You can now log in with your new password.</p>
       <button class="auth-btn" id="btnBackToLogin">Go to Login</button>
@@ -595,13 +595,13 @@
 
   if (data.authenticated) {
     showMainApp(data);
-    // ✅ Trigger onboarding/recap flow right after login
+    // Trigger onboarding/recap flow right after login
 setTimeout(() => {
   if (window.startPostLoginFlow) window.startPostLoginFlow();
 }, 0);
 
 
-    // ✅ trigger onboarding/recap immediately
+    // Trigger onboarding/recap immediately
     try {
       if (window.startPostLoginFlow) {
         window.startPostLoginFlow();
@@ -900,24 +900,20 @@ setTimeout(() => {
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">Choose your main learning objective</p>
 
       <div class="goal-selector">
-        <div class="goal-option" data-goal="Travel ✈️" onclick="selectGoalOption(this)">
-          <div class="goal-icon">✈️</div>
+        <div class="goal-option" data-goal="Travel" onclick="selectGoalOption(this)">
           <div class="goal-label">Travel</div>
         </div>
-        <div class="goal-option" data-goal="Work 💼" onclick="selectGoalOption(this)">
-          <div class="goal-icon">💼</div>
+        <div class="goal-option" data-goal="Work" onclick="selectGoalOption(this)">
           <div class="goal-label">Work</div>
         </div>
-        <div class="goal-option" data-goal="Study 📚" onclick="selectGoalOption(this)">
-          <div class="goal-icon">📚</div>
+        <div class="goal-option" data-goal="Study" onclick="selectGoalOption(this)">
           <div class="goal-label">Study</div>
         </div>
-        <div class="goal-option" data-goal="Fun 🎮" onclick="selectGoalOption(this)">
-          <div class="goal-icon">🎮</div>
+        <div class="goal-option" data-goal="Fun" onclick="selectGoalOption(this)">
           <div class="goal-label">Fun</div>
         </div>
       </div>
-      <input type="hidden" id="studyGoal" value="Travel ✈️">
+      <input type="hidden" id="studyGoal" value="Travel">
 
       <div style="display:flex;gap:10px;margin-top:24px;">
         <button class="recap-secondary" onclick="prevStep(2)" style="flex:1;">← Back</button>
@@ -932,23 +928,20 @@ setTimeout(() => {
       <p style="color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;font-size:14px;">How much Russian do you know?</p>
 
       <div class="level-selector">
-        <div class="level-option" data-level="Beginner 🌱" onclick="selectLevelOption(this)">
-          <div class="level-icon">🌱</div>
+        <div class="level-option" data-level="Beginner" onclick="selectLevelOption(this)">
           <div class="level-label">Beginner</div>
           <div class="level-desc">Starting from scratch</div>
         </div>
-        <div class="level-option" data-level="Intermediate 📖" onclick="selectLevelOption(this)">
-          <div class="level-icon">📖</div>
+        <div class="level-option" data-level="Intermediate" onclick="selectLevelOption(this)">
           <div class="level-label">Intermediate</div>
           <div class="level-desc">Know some basics</div>
         </div>
-        <div class="level-option" data-level="Advanced 🏆" onclick="selectLevelOption(this)">
-          <div class="level-icon">🏆</div>
+        <div class="level-option" data-level="Advanced" onclick="selectLevelOption(this)">
           <div class="level-label">Advanced</div>
           <div class="level-desc">Fluent speaker</div>
         </div>
       </div>
-      <input type="hidden" id="studyLevel" value="Beginner 🌱">
+      <input type="hidden" id="studyLevel" value="Beginner">
 
       <div style="display:flex;gap:10px;margin-top:24px;">
         <button class="recap-secondary" onclick="prevStep(3)" style="flex:1;">← Back</button>
@@ -965,17 +958,14 @@ setTimeout(() => {
       <div class="daily-goal-selector">
         <div class="daily-option" data-minutes="5" onclick="selectDailyGoal(this)">
           <div class="daily-time">5 min</div>
-          <div class="daily-emoji">🏃</div>
           <div class="daily-desc">Casual</div>
         </div>
         <div class="daily-option active" data-minutes="10" onclick="selectDailyGoal(this)">
           <div class="daily-time">10 min</div>
-          <div class="daily-emoji">⭐</div>
           <div class="daily-desc">Recommended</div>
         </div>
         <div class="daily-option" data-minutes="15" onclick="selectDailyGoal(this)">
           <div class="daily-time">15 min</div>
-          <div class="daily-emoji">💪</div>
           <div class="daily-desc">Serious</div>
         </div>
       </div>

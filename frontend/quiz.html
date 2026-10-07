@@ -310,7 +310,7 @@
     }
     .review-header-bar { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom: 12px; }
     .review-summary { font-size: 13px; color: #666; font-weight: 800; }
-    /* The quiz chat is moved here as-is, so its 🔊 and hint buttons keep working */
+    /* The quiz chat is moved here as-is, so its speaker and hint buttons keep working */
     .review-chat { background: #fafbff; border: 1px solid #eee; border-radius: 16px; }
     .review-chat .chat-log { max-height: 65vh; }
 
@@ -332,7 +332,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>🧠 Quiz</h1>
+      <h1>Quiz</h1>
       <a href="/" id="headerBackLink">← Back to Chat</a>
     </div>
 
@@ -371,11 +371,11 @@
             <div class="chat-status" id="tutorStatus">online</div>
           </div>
           <div class="hud-right">
-            <div class="xp-mini" title="XP">✨ <span id="xpMini">0</span></div>
+            <div class="xp-mini" title="XP"><span id="xpMini">0</span> XP</div>
             <div class="hearts" title="Hearts (lives)">
-              <span id="heart1">❤️</span><span id="heart2">❤️</span><span id="heart3">❤️</span>
+              <span id="heart1" data-icon="heart"></span><span id="heart2" data-icon="heart"></span><span id="heart3" data-icon="heart"></span>
             </div>
-            <button class="mute-btn" id="muteBtn" type="button" title="Mute Mila">🔈</button>
+            <button class="mute-btn" id="muteBtn" type="button" title="Mute Mila" data-icon="volume"></button>
           </div>
         </div>
         <div class="bars">
@@ -410,11 +410,11 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" id="correctCount">0</div>
-          <div class="stat-label">Correct ✓</div>
+          <div class="stat-label">Correct</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="incorrectCount">0</div>
-          <div class="stat-label">Incorrect ✗</div>
+          <div class="stat-label">Incorrect</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="timeTaken">0:00</div>
@@ -422,12 +422,12 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="xpEarned">0</div>
-          <div class="stat-label">XP Earned ✨</div>
+          <div class="stat-label">XP earned</div>
         </div>
       </div>
 
       <div class="quiz-nav">
-        <button class="nav-btn secondary" id="reviewBtn" onclick="reviewAnswers()">💬 Review the chat</button>
+        <button class="nav-btn secondary" id="reviewBtn" onclick="reviewAnswers()">Review the chat</button>
         <button class="nav-btn secondary" onclick="location.reload()">Take Another Quiz</button>
         <button class="nav-btn primary" onclick="location.href='/'">Back to Chat →</button>
       </div>
@@ -436,7 +436,7 @@
     <!-- Review Screen -->
     <div class="review-screen" id="reviewScreen">
       <div class="review-header-bar">
-        <h2>💬 Your chat with Mila</h2>
+        <h2>Your chat with Mila</h2>
         <div class="review-summary" id="reviewSummary"></div>
       </div>
       <div class="review-chat" id="reviewList"></div>

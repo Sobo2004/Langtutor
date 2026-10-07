@@ -37,9 +37,36 @@
 
   const faces = () => document.querySelectorAll(".mila-face");
 
+  // Line icons for buttons that need one (speaker, mic, mute, menu, hearts…). They take
+  // the button's text colour. Use Mila.icon("speaker") in code, or data-icon="speaker" in HTML.
+  const ICON_PATHS = {
+    speaker: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+    volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+    mute: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
+    mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+    menu: '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+    heart: '<path fill="currentColor" stroke="none" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+    swap: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  };
+
+  function icon(name) {
+    return `<svg class="icon icon-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ` +
+           `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[name] || ""}</svg>`;
+  }
+
+  // Put an icon (and optional label text) inside an element. The label is added as text, never HTML.
+  function setIcon(el, name, label) {
+    el.innerHTML = icon(name);
+    if (label) el.append(" ", Object.assign(document.createElement("span"), { textContent: label }));
+  }
+
   function mount(root = document) {
     root.querySelectorAll(".mila-face").forEach(el => {
       if (!el.querySelector("svg")) el.innerHTML = SVG;
+    });
+    root.querySelectorAll("[data-icon]").forEach(el => {
+      if (!el.querySelector("svg.icon")) el.insertAdjacentHTML("afterbegin", icon(el.dataset.icon));
     });
   }
 
@@ -209,6 +236,8 @@
     setMood,
     voice,
     speechParts,
+    icon,
+    setIcon,
     onTalking: cb => talkingListeners.push(cb)
   };
 

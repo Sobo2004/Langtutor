@@ -250,13 +250,13 @@ const UI_TEXT = {
     send: "Ответить",
     showOptions: "Показать варианты",
     enterHint: "Enter ↵ — ответить",
-    micHint: "🎤 можно сказать ответ вслух",
+    micHint: "Можно сказать ответ вслух",
     listening: "Слушаю…",
     micError: "Не расслышала. Попробуйте ещё раз.",
     continue: "Продолжить",
     finish: "Результаты",
-    hint: "💡 Подсказка",
-    replay: "🔊 Ещё раз",
+    hint: "Подсказка",
+    replay: "Ещё раз",
     answerIs: "Правильный ответ:",
     spelling: "Почти! Правильное написание:",
     online: "в сети",
@@ -274,13 +274,13 @@ const UI_TEXT = {
     send: "Check",
     showOptions: "Show options instead",
     enterHint: "Press Enter ↵ to check",
-    micHint: "🎤 you can also say it out loud",
+    micHint: "You can also say it out loud",
     listening: "Listening…",
     micError: "I didn't catch that. Try again.",
     continue: "Continue",
     finish: "See results",
-    hint: "💡 Hint",
-    replay: "🔊 Replay",
+    hint: "Hint",
+    replay: "Replay",
     answerIs: "Correct answer:",
     spelling: "Almost! Watch the spelling:",
     online: "online",
@@ -318,7 +318,7 @@ Mila.onTalking(on => setStatus(on ? "speaking" : "online"));
 
 function updateMuteUI() {
   if (!muteBtn) return;
-  muteBtn.textContent = voice.muted ? "🔇" : "🔈";
+  Mila.setIcon(muteBtn, voice.muted ? "mute" : "volume");
   muteBtn.title = voice.muted ? "Turn Mila's voice on" : "Mute Mila";
 }
 
@@ -608,7 +608,9 @@ function renderQuestionBubble(q, kind, i) {
 
   const speech = questionSpeech(i);
   if (kind === "listen") {
-    const play = el("button", "play-big", "🔊");
+    const play = el("button", "play-big");
+    Mila.setIcon(play, "speaker");
+    play.setAttribute("aria-label", t.replay);
     play.type = "button";
     play.title = t.replay;
     play.onclick = () => voice.speak(speech, { force: true });
@@ -625,7 +627,7 @@ function renderQuestionBubble(q, kind, i) {
     actions.appendChild(replay);
   }
   if (q.explanation) {
-    const hint = el("div", "hint", "💡 " + q.explanation);
+    const hint = el("div", "hint", q.explanation);
     hint.hidden = true;
     const hintBtn = el("button", "pill-btn", t.hint);
     hintBtn.type = "button";
@@ -649,7 +651,8 @@ function renderAnswerComposer(q, kind) {
     btn.appendChild(el("span", "label", opt));
     // Hear each option (not on listening questions — that would give the answer away)
     if (kind !== "listen") {
-      const listen = el("span", "listen", "🔊");
+      const listen = el("span", "listen");
+      Mila.setIcon(listen, "speaker");
       listen.title = "Listen";
       listen.onclick = e => { e.stopPropagation(); voice.speak(opt, { force: true }); };
       btn.appendChild(listen);
@@ -674,7 +677,9 @@ function renderTypeComposer(q) {
   row.appendChild(input);
 
   if (SpeechRecognition) {
-    const mic = el("button", "icon-btn", "🎤");
+    const mic = el("button", "icon-btn");
+    Mila.setIcon(mic, "mic");
+    mic.setAttribute("aria-label", t.micHint);
     mic.type = "button";
     mic.title = t.micHint;
     mic.onclick = () => listenForAnswer(input, mic);
@@ -815,12 +820,14 @@ async function submitAnswer(text, chosenIdx) {
     const line = el("div", "answer-line");
     line.appendChild(el("strong", "", (result === "typo" ? t.spelling : t.answerIs) + " "));
     line.appendChild(document.createTextNode(answerText + " "));
-    const hear = el("button", "pill-btn", "🔊");
+    const hear = el("button", "pill-btn");
+    Mila.setIcon(hear, "speaker");
+    hear.setAttribute("aria-label", t.replay);
     hear.type = "button";
     hear.onclick = () => voice.speak(answerText, { force: true });
     line.appendChild(hear);
     bubble.appendChild(line);
-    if (!isCorrect && q.explanation) bubble.appendChild(el("div", "hint", "💡 " + q.explanation));
+    if (!isCorrect && q.explanation) bubble.appendChild(el("div", "hint", q.explanation));
     scrollChat();
   }
 
@@ -950,7 +957,7 @@ async function submitQuizResult(payload) {
   }
 }
 
-// Review = the quiz conversation itself, replayed (moved, not copied, so 🔊 and hints still work)
+// Review = the quiz conversation itself, replayed (moved, not copied, so speaker buttons and hints still work)
 function reviewAnswers() {
   resultsScreen.classList.remove("active");
   reviewScreen.classList.add("active");
@@ -961,7 +968,7 @@ function reviewAnswers() {
 
   const wrong = quizState.answered - quizState.score;
   document.getElementById("reviewSummary").textContent =
-    `✅ ${quizState.score} correct · ❌ ${wrong} wrong`;
+    `${quizState.score} correct · ${wrong} wrong`;
 }
 
 function backToResults() {

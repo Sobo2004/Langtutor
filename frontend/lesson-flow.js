@@ -5,7 +5,7 @@
  *   [[WORD {"word","pron","meaning","say","example","example_meaning","check":{question,options,answer}}]]
  * which plays out like a spoken lesson:
  *   word card (Mila explains it out loud) → quick tap check (she asks) →
- *   "Now you try!" 🎤 pronunciation → reply buttons.
+ *   "Now you try!" pronunciation → reply buttons.
  * "Another example" replies carry [[EXAMPLE {"sentence","translation"}]].
  * Grammar lessons (Advanced level) carry [[GRAMMAR {...}]]: Mila's Colour Blocks
  * method — the rule as coloured blocks, a comparison with the learner's language,
@@ -24,13 +24,13 @@
     "en-ru": {
       round: (r, rs, k) => `Round ${r} of ${rs} · word ${k} of 5`,
       courseTitle: "Your course",
-      locked: name => `🔒 ${name}: finish the level above to unlock`,
+      locked: name => `${name}: unlocks when you finish the level above`,
       startTopicMsg: name => `Let's learn ${name}!`,
-      topicDone: name => `🎉 You've finished ${name}!`,
+      topicDone: name => `You've finished ${name}!`,
       topicDoneSub: n => `You know all ${n} words. Take the final quiz to lock them in.`,
       topicDoneSpoken: name => `Congratulations, you've finished ${name}! Take the final quiz to lock in every word.`,
       finalQuiz: "▶ Final quiz", nextTopic: t => `Next: ${t.emoji} ${t.name} →`,
-      levelDone: name => `🎓 You've completed ${name}!`,
+      levelDone: name => `You've completed ${name}!`,
       levelDoneSub: next => next ? `${next} is now unlocked. Ready for the next step?` : "You've finished the whole course. Amazing work!",
       levelDoneSpoken: name => `Wow! You've completed ${name}. I'm so proud of you!`,
       startLevel: name => `Start ${name} →`,
@@ -42,17 +42,17 @@
       roles: { subject: "Subject", verb: "Verb", object: "Object", adjective: "Adjective", adverb: "Adverb",
                article: "Article", pronoun: "Pronoun", preposition: "Preposition", place: "Place", time: "Time",
                question: "Question word", negation: "Negation", connector: "Connector", other: "Other" },
-      nextLesson: "➡️ Next lesson", buildAnother: "🧱 Build another",
+      nextLesson: "Next lesson →", buildAnother: "Build another",
       grammarExampleMsg: g => `Give me another example of «${g}», please.`,
       grammarConfusedMsg: g => `I don't understand «${g}». Can you explain it more simply?`,
       buildMsg: g => `Give me another sentence to build for «${g}».`,
-      buildTitle: "🧱 Build the sentence", buildHint: "Tap the blocks in the right order.",
+      buildTitle: "Build the sentence", buildHint: "Tap the blocks in the right order.",
       buildSpoken: tr => `Now build this sentence: ${tr}`,
       buildCheck: "Check", buildReset: "Start again", correctOrder: "Correct order:",
       buildWrong: ["Almost! Here's the right order.", "Listen and look at the colours."],
       listenAgain: "Listen again",
-      hear: "🔊 Hear it", say: "🎤 Say it", example: "💡 Another example",
-      confused: "🤔 I don't get it", next: "➡️ Next word",
+      hear: "Hear it", say: "Say it", example: "Another example",
+      confused: "I don't get it", next: "Next word →",
       nextMsg: "Next word, please!",
       exampleMsg: w => `Give me another example with «${w}», please.`,
       confusedMsg: w => `I don't understand «${w}». Can you explain it more simply?`,
@@ -60,13 +60,13 @@
       wrong: c => [`Not quite, it's «${c}».`, "You'll remember it next time!"],
       tryIt: w => [`Now you try! Say «${w}».`, "Tap the microphone and say it out loud."],
       tryItSpoken: w => `Now you try! Say: ${w}`,
-      micBtn: "🎤 Tap and say it", skip: "Skip",
-      listening: w => `🎤 Listening… say «${w}»`,
+      micBtn: "Tap and say it", skip: "Skip",
+      listening: w => `Listening… say «${w}»`,
       heard: x => `I heard: «${x}»`,
       sayGood: ["Отличное произношение!", "Great pronunciation!"],
       sayAgain: ["Почти!", "Almost! Listen to me and try again."],
       micError: "I couldn't hear you. Check your microphone and try again.",
-      checkpoint: n => `🎉 You learnt ${n} new words!`,
+      checkpoint: n => `You learnt ${n} new words!`,
       checkpointSub: "Let's lock them in with a quick quiz.",
       checkpointSpoken: n => `Amazing, you learnt ${n} new words! Let's lock them in with a quick quiz.`,
       quiz: "▶ Quick quiz", keep: "Keep learning"
@@ -74,13 +74,13 @@
     "ru-en": {
       round: (r, rs, k) => `Раунд ${r} из ${rs} · слово ${k} из 5`,
       courseTitle: "Твой курс",
-      locked: name => `🔒 ${name}: пройди уровень выше, чтобы открыть`,
+      locked: name => `${name}: откроется, когда пройдёшь уровень выше`,
       startTopicMsg: name => `Давай учить тему «${name}»!`,
-      topicDone: name => `🎉 Тема «${name}» пройдена!`,
+      topicDone: name => `Тема «${name}» пройдена!`,
       topicDoneSub: n => `Ты знаешь все ${n} слов. Пройди итоговый тест, чтобы закрепить их.`,
       topicDoneSpoken: name => `Поздравляю, тема ${name} пройдена! Пройди итоговый тест, чтобы закрепить все слова.`,
       finalQuiz: "▶ Итоговый тест", nextTopic: t => `Дальше: ${t.emoji} ${t.name} →`,
-      levelDone: name => `🎓 Уровень «${name}» пройден!`,
+      levelDone: name => `Уровень «${name}» пройден!`,
       levelDoneSub: next => next ? `Теперь открыт уровень «${next}». Готов к следующему шагу?` : "Ты прошёл весь курс. Потрясающе!",
       levelDoneSpoken: name => `Ура! Уровень ${name} пройден. Я тобой горжусь!`,
       startLevel: name => `Начать: ${name} →`,
@@ -92,17 +92,17 @@
       roles: { subject: "Подлежащее", verb: "Глагол", object: "Дополнение", adjective: "Прилагательное", adverb: "Наречие",
                article: "Артикль", pronoun: "Местоимение", preposition: "Предлог", place: "Место", time: "Время",
                question: "Вопросительное слово", negation: "Отрицание", connector: "Союз", other: "Другое" },
-      nextLesson: "➡️ Следующий урок", buildAnother: "🧱 Собрать ещё",
+      nextLesson: "Следующий урок →", buildAnother: "Собрать ещё",
       grammarExampleMsg: g => `Дай, пожалуйста, ещё пример на тему «${g}».`,
       grammarConfusedMsg: g => `Я не понимаю тему «${g}». Объясни попроще?`,
       buildMsg: g => `Дай ещё одно предложение для сборки на тему «${g}».`,
-      buildTitle: "🧱 Собери предложение", buildHint: "Нажимай на блоки в правильном порядке.",
+      buildTitle: "Собери предложение", buildHint: "Нажимай на блоки в правильном порядке.",
       buildSpoken: tr => `Теперь собери предложение: ${tr}`,
       buildCheck: "Проверить", buildReset: "Сначала", correctOrder: "Правильный порядок:",
       buildWrong: ["Почти! Вот правильный порядок.", "Послушай и посмотри на цвета."],
       listenAgain: "Послушать ещё раз",
-      hear: "🔊 Послушать", say: "🎤 Сказать", example: "💡 Ещё пример",
-      confused: "🤔 Не понимаю", next: "➡️ Следующее слово",
+      hear: "Послушать", say: "Сказать", example: "Ещё пример",
+      confused: "Не понимаю", next: "Следующее слово →",
       nextMsg: "Следующее слово, пожалуйста!",
       exampleMsg: w => `Дай, пожалуйста, ещё пример с «${w}».`,
       confusedMsg: w => `Я не понимаю «${w}». Объясни попроще?`,
@@ -110,13 +110,13 @@
       wrong: c => [`Не совсем, правильно: «${c}».`, "В следующий раз получится!"],
       tryIt: w => [`Теперь ты! Скажи «${w}».`, "Нажми на микрофон и скажи вслух."],
       tryItSpoken: w => `Теперь ты! Скажи: ${w}`,
-      micBtn: "🎤 Нажми и скажи", skip: "Пропустить",
-      listening: w => `🎤 Слушаю… скажи «${w}»`,
+      micBtn: "Нажми и скажи", skip: "Пропустить",
+      listening: w => `Слушаю… скажи «${w}»`,
       heard: x => `Я услышала: «${x}»`,
       sayGood: ["Great pronunciation!", "Отличное произношение!"],
       sayAgain: ["Almost!", "Почти! Послушай меня и попробуй ещё раз."],
       micError: "Не получилось тебя услышать. Проверь микрофон и попробуй ещё раз.",
-      checkpoint: n => `🎉 Ты выучил(а) ${n} новых слов!`,
+      checkpoint: n => `Ты выучил(а) ${n} новых слов!`,
       checkpointSub: "Давай закрепим их коротким тестом.",
       checkpointSpoken: n => `Потрясающе, ты выучил ${n} новых слов! Давай закрепим их коротким тестом.`,
       quiz: "▶ Быстрый тест", keep: "Учиться дальше"
@@ -148,9 +148,11 @@
   }
 
   function speakerButton(text) {
-    const b = el("button", "spk-btn", "🔊");
+    const b = el("button", "spk-btn");
     b.type = "button";
     b.title = "Listen";
+    b.setAttribute("aria-label", "Listen");
+    Mila.setIcon(b, "speaker");
     b.onclick = () => Mila.voice.speak(text, { force: true });
     return b;
   }
@@ -169,10 +171,11 @@
     }
   }
 
-  // Small "🔊 Listen again" button that replays what Mila said in this bubble
+  // Small "Listen again" button that replays what Mila said in this bubble
   function addReplay(bubble, parts) {
     if (!bubble || !parts.length || bubble.querySelector(".replay-btn")) return;
-    const b = el("button", "replay-btn", "🔊 " + t().listenAgain);
+    const b = el("button", "replay-btn");
+    Mila.setIcon(b, "speaker", t().listenAgain);
     b.type = "button";
     b.onclick = () => readAloud(bubble, parts, { force: true });
     bubble.appendChild(b);
@@ -235,7 +238,7 @@
       const learnt = level.topics.reduce((a, tp) => a + tp.learnt, 0);
       const total = level.topics.reduce((a, tp) => a + tp.total, 0);
       const head = el("div", "course-level");
-      head.append(el("span", "", (level.done ? "🎓 " : "") + level.name), el("span", "course-level-count", `${learnt}/${total}`));
+      head.append(el("span", "", level.name), el("span", "course-level-count", level.done ? "Done" : `${learnt}/${total}`));
       box.appendChild(head);
 
       level.topics.forEach(tp => {
@@ -244,7 +247,7 @@
         if (tp.done) b.classList.add("done");
         if (course && course.topic.id === tp.id) b.classList.add("active");
         const row = el("div", "ct-row");
-        row.append(el("span", "ct-emoji", tp.emoji), el("span", "ct-name", tp.name),
+        row.append(el("span", "ct-name", tp.name),
                    el("span", "ct-count", tp.done ? "✓" : `${tp.learnt}/${tp.total}`));
         const bar = el("div", "ct-bar");
         const fill = el("div", "ct-fill");
@@ -262,7 +265,7 @@
     if (!box) return;
     box.hidden = !course || !course.learnt || course.topic_done;
     if (box.hidden) return;
-    document.getElementById("roundLabel").textContent = `${course.topic.emoji} ${course.topic.name} · ` +
+    document.getElementById("roundLabel").textContent = `${course.topic.name} · ` +
       (course.grammar ? t().lesson(course.learnt, course.total) : t().round(course.round, course.rounds, course.in_round));
     document.getElementById("roundFill").style.width = `${(course.in_round / 5) * 100}%`;
   }
@@ -281,8 +284,9 @@
     clearReplies();
     const tx = t();
     const row = el("div", "reply-chips");
-    const chip = (label, onClick) => {
-      const b = el("button", "reply-chip", label);
+    const chip = (label, onClick, iconName) => {
+      const b = el("button", "reply-chip", iconName ? undefined : label);
+      if (iconName) Mila.setIcon(b, iconName, label);
       b.type = "button";
       b.onclick = onClick;
       row.appendChild(b);
@@ -297,8 +301,8 @@
       return scrollDown();
     }
     if (card) {
-      chip(tx.hear, () => Mila.voice.speak(card.word, { force: true }));
-      if (SpeechRecognition) chip(tx.say, () => sayIt(card, showReplies));
+      chip(tx.hear, () => Mila.voice.speak(card.word, { force: true }), "speaker");
+      if (SpeechRecognition) chip(tx.say, () => sayIt(card, showReplies), "mic");
       chip(tx.example, () => sendMessage(tx.exampleMsg(card.word), "example"));
       chip(tx.confused, () => sendMessage(tx.confusedMsg(card.word), "explain"));
     }
@@ -392,7 +396,8 @@
     div.appendChild(el("div", "sub", sub));
 
     const actions = el("div", "try-actions");
-    const mic = el("button", "try-mic", tx.micBtn);
+    const mic = el("button", "try-mic");
+    Mila.setIcon(mic, "mic", tx.micBtn);
     mic.type = "button";
     const skip = el("button", "try-skip", tx.skip);
     skip.type = "button";
@@ -447,7 +452,6 @@
     clearReplies();
     const tx = t();
     const div = addBot("checkpoint topic-done");
-    div.appendChild(el("div", "cp-badge", c.topic.emoji));
     div.appendChild(el("div", "cp-title", tx.topicDone(c.topic.name)));
     div.appendChild(el("div", "cp-sub", tx.topicDoneSub(c.total)));
     const chips = el("div", "cp-words");
@@ -478,7 +482,6 @@
   function showLevelDone(c) {
     const tx = t();
     const div = addBot("checkpoint level-done");
-    div.appendChild(el("div", "cp-badge", "🎓"));
     div.appendChild(el("div", "cp-title", tx.levelDone(c.level.name)));
     div.appendChild(el("div", "cp-sub", tx.levelDoneSub(c.next_level && c.next_level.name)));
     if (c.next_level && c.next_level.first_topic) {
@@ -494,7 +497,7 @@
     readAloud(div, [tx.levelDoneSpoken(c.level.name)]);
   }
 
-  /* ---------- 🎤 Pronunciation practice ---------- */
+  /* ---------- Pronunciation practice ---------- */
 
   function normalize(s) {
     return String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[.,!?;:"'«»()…\-–—]/g, " ").replace(/\s+/g, " ").trim();
@@ -573,7 +576,7 @@
     return b;
   }
 
-  // A sentence drawn as coloured blocks, with 🔊 for the whole sentence
+  // A sentence drawn as coloured blocks, with a speaker button for the whole sentence
   function blocksLine(parts, translation) {
     const wrap = el("div", "g-example");
     const line = el("div", "blocks");
@@ -655,7 +658,7 @@
       };
       row(tx.targetName, cmp.target, true);
       row(tx.nativeName, cmp.native, false);
-      if (cmp.note) box.appendChild(el("div", "g-cmp-note", "💡 " + cmp.note));
+      if (cmp.note) box.appendChild(el("div", "g-cmp-note", cmp.note));
       await step(section(tx.compareLabel, box), [cmp.target, cmp.native, cmp.note]);
     }
 
@@ -666,7 +669,7 @@
       for (const e of examples) {
         const parts = e.parts.filter(p => p && p.t);
         const ex = blocksLine(parts, e.translation);
-        if (e.note) ex.appendChild(el("div", "g-note", "👉 " + e.note));
+        if (e.note) ex.appendChild(el("div", "g-note", e.note));
         await step(ex, [sentenceOf(parts), e.translation, e.note]);
       }
     }
@@ -674,7 +677,7 @@
     // 6. Memory tip
     if (card.tip) {
       const tip = el("div", "g-tip");
-      tip.append(el("strong", "", "💡 " + tx.tipLabel + ": "), document.createTextNode(card.tip));
+      tip.append(el("strong", "", tx.tipLabel + ": "), document.createTextNode(card.tip));
       await step(tip, [card.tip]);
     }
 

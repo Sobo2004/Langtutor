@@ -30,21 +30,21 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const transcript = event.results[0][0].transcript;
     input.value = transcript;
     isListening = false;
-    voiceBtn.textContent = '🎤';
+    Mila.setIcon(voiceBtn, 'mic');
     voiceBtn.style.background = '';
   };
 
   recognition.onerror = (event) => {
     console.error('Speech recognition error:', event.error);
     isListening = false;
-    voiceBtn.textContent = '🎤';
+    Mila.setIcon(voiceBtn, 'mic');
     voiceBtn.style.background = '';
     addMessage(`Voice error: ${event.error}. Try typing instead.`, "bot");
   };
 
   recognition.onend = () => {
     isListening = false;
-    voiceBtn.textContent = '🎤';
+    Mila.setIcon(voiceBtn, 'mic');
     voiceBtn.style.background = '';
   };
 }
@@ -58,37 +58,37 @@ function speakWord(element) {
 
 // Toggle voice input
 function toggleVoiceInput() {
-  console.log('🎤 Mic button clicked!');
+  console.log('Mic button clicked!');
   console.log('recognition available:', !!recognition);
   console.log('isListening:', isListening);
   
   if (!recognition) {
-    console.log('❌ Recognition not initialized');
+    console.log('Recognition not initialized');
     alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
     return;
   }
 
   if (isListening) {
-    console.log('🛑 Stopping mic...');
+    console.log('Stopping mic...');
     recognition.stop();
     isListening = false;
-    voiceBtn.textContent = '🎤';
+    Mila.setIcon(voiceBtn, 'mic');
     voiceBtn.style.background = '';
   } else {
     // Set language based on mode before starting
     // In ru-en mode: learning English, so listen for English
     // In en-ru mode: learning Russian, so listen for Russian
     recognition.lang = currentMode === 'ru-en' ? 'en-US' : 'ru-RU';
-    console.log('🎤 Starting mic with language:', recognition.lang);
+    console.log('Starting mic with language:', recognition.lang);
     
     try {
       recognition.start();
       isListening = true;
-      voiceBtn.textContent = '⏸️';
+      Mila.setIcon(voiceBtn, 'stop');
       voiceBtn.style.background = '#ff4444';
-      console.log('✅ Mic started successfully');
+      console.log('Mic started successfully');
     } catch (e) {
-      console.error('❌ Error starting mic:', e);
+      console.error('Error starting mic:', e);
       alert('Error starting microphone: ' + e.message);
     }
   }
@@ -121,9 +121,9 @@ function milaSpeechFor(message) {
 function speakLastMessage() {
   const text = lastBotMessage ? milaSpeechFor(lastBotMessage) : '';
   if (!text) return;
-  if (listenBtn) listenBtn.textContent = '⏸️';
+  if (listenBtn) Mila.setIcon(listenBtn, 'stop');
   Mila.voice.speak(text, { force: true }).finally(() => {
-    if (listenBtn) listenBtn.textContent = '🔊';
+    if (listenBtn) Mila.setIcon(listenBtn, 'speaker');
   });
 }
 
@@ -141,7 +141,7 @@ function setMilaStatus(kind) {
 
 function updateMilaMuteUI() {
   if (!milaMuteBtn) return;
-  milaMuteBtn.textContent = Mila.voice.muted ? '🔇' : '🔈';
+  Mila.setIcon(milaMuteBtn, Mila.voice.muted ? 'mute' : 'volume');
   milaMuteBtn.title = Mila.voice.muted ? "Turn Mila's voice on" : 'Mute Mila';
   milaMuteBtn.setAttribute('aria-label', milaMuteBtn.title);
   milaMuteBtn.setAttribute('aria-pressed', String(Mila.voice.muted));
@@ -183,14 +183,14 @@ function botHTML(text) {
     var isLabel = BOT_LABELS.indexOf(w.trim().toLowerCase().replace(/:$/, '')) >= 0;
     if (isLabel) return '<strong>' + w + '</strong>';
     var lang = /[А-Яа-яЁё]/.test(w) ? 'ru' : 'en';
-    return '<strong>' + w + '</strong><button class="spk-btn" data-word="' + w + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button>';
+    return '<strong>' + w + '</strong><button class="spk-btn" data-word="' + w + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce" aria-label="Pronounce">' + Mila.icon('speaker') + '</button>';
   });
 
   // Make speaker icons in example sentences clickable
   // Pattern: "Example: [sentence] — [translation]" (emojis already removed above)
   t = t.replace(/Example:\s*(.+?)\s*(—)/g, function(_, sentence, dash) {
     var lang = /[А-Яа-яЁё]/.test(sentence) ? 'ru' : 'en';
-    return 'Example: ' + sentence + ' <button class="spk-btn" data-word="' + sentence.trim() + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce">🔊</button> ' + dash;
+    return 'Example: ' + sentence + ' <button class="spk-btn" data-word="' + sentence.trim() + '" data-lang="' + lang + '" onclick="speakWord(this)" title="Pronounce" aria-label="Pronounce">' + Mila.icon('speaker') + '</button> ' + dash;
   });
 
   // newlines to <br>
@@ -259,7 +259,7 @@ async function sendMessage(textOverride, intent, topic) {
         return;
       }
       if (response.status === 429) {
-        addMessage("You're going a little fast! Give me a few seconds and try again. ⏳", "bot");
+        addMessage("You're going a little fast! Give me a few seconds and try again.", "bot");
         return;
       }
       throw new Error('Chat request failed');
@@ -358,7 +358,7 @@ function updateProgress(p) {
       progressWordsEl.innerText = p.words_completed;
     }
 
-    console.log('✅ Word counter updated:', p.words_completed);
+    console.log('Word counter updated:', p.words_completed);
   }
 }
 
@@ -401,7 +401,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         const wordsEl = document.getElementById('completedCount');
         if (wordsEl) {
           wordsEl.textContent = data.words_completed;
-          console.log('✅ Loaded word count on page load:', data.words_completed);
+          console.log('Loaded word count on page load:', data.words_completed);
         }
       }
     }
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnTimeUpContinue').addEventListener('click', closeTimeUpPopup);
   document.getElementById('btnTimeUpDone').addEventListener('click', function() {
     closeTimeUpPopup();
-    addMessage("Great work today! See you tomorrow! 👋", "bot");
+    addMessage("Great work today! See you tomorrow!", "bot");
   });
 });
 
@@ -535,7 +535,7 @@ window.toggleLanguage = function() {
   const modeText = currentMode === 'en-ru' 
     ? 'English → Russian' 
     : 'Русский → Английский';
-  addMessage(`🔄 ${currentMode === 'en-ru' ? 'Mode switched to' : 'Режим переключен на'}: ${modeText}`, 'bot');
+  addMessage(`${currentMode === 'en-ru' ? 'Mode switched to' : 'Режим переключен на'}: ${modeText}`, 'bot');
   
   console.log('Language mode:', currentMode);
 }
@@ -660,7 +660,7 @@ window.saveOnboardingAvatar = function() {
     const preview = document.getElementById('onboardingAvatarPreview');
     preview.replaceChildren(Object.assign(document.createElement('span'), { textContent: selectedOnboardingAvatar }));
     closeOnboardingAvatarPicker();
-    console.log('✅ Avatar selected:', selectedOnboardingAvatar);
+    console.log('Avatar selected:', selectedOnboardingAvatar);
   }
 };
 
@@ -764,7 +764,7 @@ window.submitOnboarding = async function submitOnboarding() {
   // Save daily goal to localStorage
   localStorage.setItem('dailyGoalMinutes', dailyGoalMinutes.toString());
 
-  console.log(`✅ Onboarding complete: Daily goal set to ${dailyGoalMinutes} minutes`);
+  console.log(`Onboarding complete: Daily goal set to ${dailyGoalMinutes} minutes`);
 
   await fetch("/onboarding/submit", {
     method: "POST",
@@ -781,7 +781,7 @@ window.submitOnboarding = async function submitOnboarding() {
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   if (sidebarAvatar && selectedOnboardingAvatar) {
     sidebarAvatar.textContent = selectedOnboardingAvatar;
-    console.log('✅ Sidebar avatar updated:', selectedOnboardingAvatar);
+    console.log('Sidebar avatar updated:', selectedOnboardingAvatar);
   }
 
   await window.checkRecap();
@@ -923,7 +923,7 @@ function renderRecapFeedback() {
     if (_recapQuestions[i] && _recapAnswers[i] === _recapQuestions[i].answer) correct++;
   }
 
-  const mascotEmoji = correct === _recapAnswers.length ? '🎉' : correct >= _recapAnswers.length / 2 ? '😊' : '<img class="mila-img" src="/static/mila.svg" alt="Mila">';
+  const mascotEmoji = '<img class="mila-img" src="/static/mila.svg" alt="Mila">';
 
   const html = `
     <div class="recap-mascot">${mascotEmoji}</div>
@@ -938,14 +938,14 @@ function renderRecapFeedback() {
     <p style="margin:8px 0 10px;color:rgba(255,255,255,0.9);">How did that feel?</p>
 
     <div class="recap-feedback">
-      <button class="recap-pill" onclick="submitRecap('too_easy')">😴 Too easy</button>
-      <button class="recap-pill" onclick="submitRecap('just_right')">👍 Just right</button>
-      <button class="recap-pill" onclick="submitRecap('too_hard')">😰 Too hard</button>
+      <button class="recap-pill" onclick="submitRecap('too_easy')">Too easy</button>
+      <button class="recap-pill" onclick="submitRecap('just_right')">Just right</button>
+      <button class="recap-pill" onclick="submitRecap('too_hard')">Too hard</button>
     </div>
 
     <textarea id="recapComment" placeholder="Optional feedback..."></textarea>
 
-    <button class="recap-primary" style="margin-top:12px;" onclick="submitRecap(null)">✨ Continue</button>
+    <button class="recap-primary" style="margin-top:12px;" onclick="submitRecap(null)">Continue</button>
   `;
 
   document.getElementById("recapContent").innerHTML = html;
@@ -959,7 +959,7 @@ window.submitRecap = async function submitRecap(rating) {
   if (content) {
     content.innerHTML = `
       <div style="text-align:center;padding:40px 20px;">
-        <div style="font-size:80px;margin-bottom:16px;">🎉</div>
+        <div style="margin-bottom:16px;"><img class="mila-img" src="/static/mila.svg" alt=""></div>
         <h2 style="margin:0 0 8px;color:white;">Thanks for the feedback!</h2>
         <p style="color:rgba(255,255,255,0.9);margin:0;font-size:16px;">Keep up the great work!</p>
       </div>
@@ -1018,7 +1018,7 @@ function escapeHtml(str) {
     const bar = document.createElement('div');
     bar.id = 'updateBar';
     bar.className = 'update-bar';
-    bar.innerHTML = '<span>✨ Mila has been updated.</span>';
+    bar.innerHTML = '<span>Mila has been updated.</span>';
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = 'Refresh';

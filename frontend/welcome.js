@@ -50,8 +50,8 @@ function renderWelcomeScreen() {
     'Welcome back, ' + welcomeData.username + '!';
 
   document.getElementById('popupStreak').textContent = welcomeData.streak > 0
-    ? '🔥 ' + welcomeData.streak + '-day streak! Keep it going!'
-    : '⭐ ' + welcomeData.xp + ' XP earned so far';
+    ? welcomeData.streak + '-day streak! Keep it going!'
+    : welcomeData.xp + ' XP earned so far';
 
   var row = document.getElementById('popupReviewRow');
   row.innerHTML = '';
@@ -120,7 +120,7 @@ function handleRecapAnswer(btn, selected, correct) {
   if (selected === correct) {
     btn.classList.add('correct');
     fb.className   = 'popup-feedback correct';
-    fb.textContent = '✅ Correct!';
+    fb.textContent = 'Correct!';
     correctCount++;
   } else {
     btn.classList.add('wrong');
@@ -128,7 +128,7 @@ function handleRecapAnswer(btn, selected, correct) {
       if (b.textContent === correct) b.classList.add('correct');
     });
     fb.className   = 'popup-feedback wrong';
-    fb.textContent = '❌ Correct: ' + correct;
+    fb.textContent = 'The answer was: ' + correct;
   }
 
   setTimeout(function() {
@@ -185,14 +185,14 @@ function handleListenAnswer(btn, chosen) {
   if (chosen.russian === listenWord.russian) {
     btn.classList.add('correct');
     fb.className   = 'popup-feedback correct';
-    fb.textContent = '✅ Correct! ' + listenWord.russian + ' means "' + listenWord.meaning + '"';
+    fb.textContent = 'Correct! ' + listenWord.russian + ' means "' + listenWord.meaning + '"';
   } else {
     btn.classList.add('wrong');
     document.querySelectorAll('.listen-opt').forEach(function(b) {
       if (b.textContent.indexOf(listenWord.russian) !== -1) b.classList.add('correct');
     });
     fb.className   = 'popup-feedback wrong';
-    fb.textContent = '❌ It was ' + listenWord.russian + ' (' + listenWord.pron + ') — "' + listenWord.meaning + '"';
+    fb.textContent = 'It was ' + listenWord.russian + ' (' + listenWord.pron + ') — "' + listenWord.meaning + '"';
   }
 
   setTimeout(function() { showScreen('screenOnboard4'); }, 1400);
@@ -277,9 +277,9 @@ function wireButtons() {
 
   // --- Feedback buttons (How are you enjoying?) ---
   var feedbacks = [
-    { id: 'btnLove', value: 'loving', icon: '😍', msg: "That's awesome! We love hearing that." },
-    { id: 'btnGood', value: 'good', icon: '👍', msg: "Great! We'll keep making it better." },
-    { id: 'btnMeh',  value: 'okay', icon: '📊', msg: "Thanks for being honest! We're working on it." }
+    { id: 'btnLove', value: 'loving', msg: "That's awesome! We love hearing that." },
+    { id: 'btnGood', value: 'good', msg: "Great! We'll keep making it better." },
+    { id: 'btnMeh',  value: 'okay', msg: "Thanks for being honest! We're working on it." }
   ];
   feedbacks.forEach(function(f) {
     var el = document.getElementById(f.id);
@@ -287,7 +287,6 @@ function wireButtons() {
       el.addEventListener('click', function() {
         // Save enjoyment response
         localStorage.setItem('userEnjoyment', f.value);
-        document.getElementById('thankIcon').textContent = f.icon;
         document.getElementById('thankMsg').textContent  = f.msg;
         showScreen('screenPurpose'); // Go to purpose screen
       });
@@ -337,7 +336,7 @@ function closePopup() {
   var popup = document.getElementById('welcomePopup');
   if (popup) popup.classList.remove('active');
 
-  // ✅ prevent re-opening in this tab/session
+  // Prevent re-opening in this tab/session
   try {
     sessionStorage.removeItem('showWelcomeOnLogin');
     sessionStorage.setItem('welcomePopupDismissed', '1');
@@ -349,14 +348,14 @@ function closePopup() {
     addMessage(
       'Привет! (pree-VYET — Hello!) I\'m Mila, your Russian tutor.\n\n' +
       'I teach one word at a time, with a quick check after each one. Every 5 words we do a mini quiz!\n\n' +
-      '🎤 Mic to speak  |  🔊 Speaker to listen\n\n' +
+      'Tap the microphone to speak, and the speaker to hear a word again.\n\n' +
       'Click a lesson or type "teach me greetings"! 🇷🇺',
       'bot'
     );
   }
 }
 
-// ✅ Needed because popup HTML uses onclick="closePopup()"
+// Needed because popup HTML uses onclick="closePopup()"
 window.closePopup = closePopup;
 
 function shuffleArray(arr) {

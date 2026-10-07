@@ -179,12 +179,12 @@ function renderQuizHistory(container, quizzes) {
       document.getElementById("statQuizzes").textContent = totalQuizzes;
       document.getElementById("statAvgScore").textContent = avgScore > 0 ? avgScore + '%' : '0%';
       
-      console.log(`✅ Displayed: ${totalQuizzes} quizzes, ${avgScore}% avg`);
+      console.log(`Displayed: ${totalQuizzes} quizzes, ${avgScore}% avg`);
     }
   } catch (error) {
     console.error('Failed to load quiz stats:', error);
-    document.getElementById("statQuizzes").textContent = "⚠️";
-    document.getElementById("statAvgScore").textContent = "⚠️";
+    document.getElementById("statQuizzes").textContent = "—";
+    document.getElementById("statAvgScore").textContent = "—";
   }
 
   // Load XP history
