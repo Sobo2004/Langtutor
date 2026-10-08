@@ -17,3 +17,6 @@ Thumbs.db
 
 # Cached tutor voice audio
 tts_cache/
+
+# Local example settings file
+.env.example

@@ -38,12 +38,14 @@ A full-stack web application for learning Russian and English through interactiv
    pip install -r requirements.txt
    ```
 
-2. **Configure your API key:**
-   - Open the `.env` file
-   - Replace `your_openai_api_key_here` with your actual OpenAI API key:
-     ```
-     OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
-     ```
+2. **Create a `.env` file** in the project folder (it is git-ignored, so secrets are never committed):
+   ```
+   LLM_PROVIDER=openai
+   OPENAI_API_KEY=your_openai_api_key
+   OPENAI_MODEL=gpt-4o-mini
+   ADMIN_PASSWORD=choose_a_strong_password
+   ```
+   Optional: `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE` (Mila's voice), and `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` for password-reset emails.
 
 3. **Start the server:**
    ```bash
@@ -111,7 +113,7 @@ projectai3/
 ├── main.py              # Backend API (FastAPI)
 ├── requirements.txt     # Python dependencies
 ├── .env                 # Configuration (API keys)
-├── .env.example         # Example configuration
+├── .env                 # Your settings and API key (not committed)
 ├── README.md            # This file
 └── frontend/
     ├── index.html       # Main app UI
