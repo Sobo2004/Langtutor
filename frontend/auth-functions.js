@@ -151,171 +151,8 @@ function startCountdown(btnId, timerId, seconds, callback) {
   }, 1000);
 }
 
-// ============== SIGNUP FLOW ==============
-
-let currentSignupEmail = '';
-let currentOTPPurpose = 'email_verification';
-
-async function handleSignup(username, password, email) {
-  // Validate inputs
-  const usernameCheck = validateUsername(username);
-  if (!usernameCheck.valid) {
-    document.getElementById('signupError').textContent = usernameCheck.error;
-    return;
-  }
-  
-  const passwordCheck = validatePassword(password);
-  if (!passwordCheck.valid) {
-    document.getElementById('signupError').textContent = 'Password requirements: ' + passwordCheck.errors.join(', ');
-    return;
-  }
-  
-  if (!validateEmail(email)) {
-    document.getElementById('signupError').textContent = 'Please enter a valid email (e.g. name@gmail.com)';
-    return;
-  }
-
-  const domainCheck = await checkEmailDomain(email);
-  if (!domainCheck.valid) {
-    document.getElementById('signupError').textContent = domainCheck.error;
-    return;
-  }
-
-  try {
-    const res = await fetch('/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, email })
-    });
-    
-    const data = await res.json();
-    
-    if (!res.ok) {
-      document.getElementById('signupError').textContent = data.detail || 'Signup failed';
-      return;
-    }
-    
-    if (data.require_verification) {
-      currentSignupEmail = data.email;
-      currentOTPPurpose = 'email_verification';
-      showOTPModal(data.email);
-    }
-  } catch (err) {
-    document.getElementById('signupError').textContent = 'Network error. Please try again.';
-  }
-}
-
-function showOTPModal(email) {
-  document.getElementById('otpEmail').textContent = email;
-  clearOTP('otp');
-  document.getElementById('otpError').textContent = '';
-
-  // Show step 1, hide step 2
-  document.getElementById('otpStep1').classList.add('active');
-  document.getElementById('otpStep2').classList.remove('active');
-
-  document.getElementById('otpModal').classList.add('active');
-  document.getElementById('otp1').focus();
-  startCountdown('btnResendOTP', 'resendTimer', 30);
-}
-
-async function verifyOTP() {
-  const code = getOTPValue('otp');
-  
-  if (code.length !== 6) {
-    document.getElementById('otpError').textContent = 'Please enter all 6 digits';
-    showOTPError('otp');
-    return;
-  }
-  
-  try {
-    const res = await fetch('/auth/verify-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: currentSignupEmail,
-        code: code,
-        purpose: currentOTPPurpose
-      })
-    });
-    
-    const data = await res.json();
-    
-    if (!res.ok) {
-      document.getElementById('otpError').textContent = data.detail || 'Invalid code';
-      showOTPError('otp');
-      clearOTP('otp');
-      return;
-    }
-
-    // Success! Show success step
-    document.getElementById('otpStep1').classList.remove('active');
-    document.getElementById('otpStep2').classList.add('active');
-  } catch (err) {
-    document.getElementById('otpError').textContent = 'Network error. Please try again.';
-  }
-}
-
-async function resendOTP() {
-  try {
-    const res = await fetch('/auth/resend-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: currentSignupEmail,
-        purpose: currentOTPPurpose
-      })
-    });
-    
-    if (res.ok) {
-      clearOTP('otp');
-      document.getElementById('otpError').textContent = '';
-      alert('A new code has been sent to your email.');
-      startCountdown('btnResendOTP', 'resendTimer', 30);
-    }
-  } catch (err) {
-    console.error('Resend failed:', err);
-  }
-}
-
-// ============== LOGIN FLOW ==============
-
-async function handleLogin(username, password) {
-  const usernameCheck = validateUsername(username);
-  if (!usernameCheck.valid) {
-    document.getElementById('loginError').textContent = usernameCheck.error;
-    return;
-  }
-  
-  try {
-    const res = await fetch('/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    
-    const data = await res.json();
-    
-    if (data.require_verification) {
-      // Email not verified - show OTP modal
-      currentSignupEmail = data.email;
-      currentOTPPurpose = 'email_verification';
-      document.getElementById('loginError').textContent = '';
-      showOTPModal(data.email);
-      return;
-    }
-    
-    if (!res.ok) {
-      document.getElementById('loginError').textContent = data.detail || 'Login failed';
-      return;
-    }
-    
-    // Success - reload page
-    window.location.reload();
-  } catch (err) {
-    document.getElementById('loginError').textContent = 'Network error. Please try again.';
-  }
-}
+// Sign-up and login forms are handled by the inline script in index.html.
+// This file provides validation helpers and the forgot-password flow.
 
 // Immediately start onboarding/recap flow after login
 if (window.startPostLoginFlow) {
@@ -464,8 +301,7 @@ async function resendResetCode() {
 // ============== INITIALIZE ==============
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Setup OTP inputs
-  setupOTPInputs('otp');
+  // Setup the reset-code inputs
   setupOTPInputs('reset');
 
   // Setup password strength indicators
@@ -475,14 +311,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', handler);
   }
-
-  // OTP Modal buttons
-  on('btnVerifyOTP', verifyOTP);
-  on('btnResendOTP', resendOTP);
-  on('btnGoToLogin', function() {
-    document.getElementById('otpModal').classList.remove('active');
-    showLoginPage();
-  });
 
   // Forgot Password buttons
   on('closeForgotPassword', closeForgotPassword);

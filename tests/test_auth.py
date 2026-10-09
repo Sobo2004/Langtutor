@@ -71,3 +71,37 @@ def test_voice_endpoint_is_rate_limited_per_user(user, app_module, monkeypatch):
     monkeypatch.setattr(app_module, "OPENAI_API_KEY", None)   # stop before any paid call
     codes = [client.post("/api/tts", json={"text": "hi"}).status_code for _ in range(4)]
     assert codes == [503, 503, 503, 429]
+
+
+def _signup_with_email(client, email):
+    name = "r_" + uuid.uuid4().hex[:8]
+    assert client.post("/auth/signup", json={"username": name, "password": "oldpass1", "email": email}).status_code == 200
+    return name
+
+
+def test_password_reset_flow_with_resend(client, app_module, monkeypatch):
+    monkeypatch.setattr(app_module, "SMTP_USER", "")          # dev mode: the code comes back in the response
+    email = f"{uuid.uuid4().hex[:8]}@example.com"
+    name = _signup_with_email(client, email)
+
+    first = client.post("/auth/forgot-password", json={"email": email}).json()["dev_code"]
+    assert len(first) == 6 and first.isdigit()
+
+    resent = client.post("/auth/resend-otp", json={"email": email, "purpose": "forgot_password"})
+    assert resent.status_code == 200                          # regression: this used to crash with a 500
+    second = resent.json()["dev_code"]
+
+    # The first code was replaced by the resend
+    old = client.post("/auth/reset-password", json={"email": email, "code": first, "new_password": "newpass1"})
+    if first != second:
+        assert old.status_code == 400
+
+    ok = client.post("/auth/reset-password", json={"email": email, "code": second, "new_password": "newpass1"})
+    assert ok.status_code == 200
+    assert client.post("/auth/login", json={"username": name, "password": "newpass1"}).status_code == 200
+    assert client.post("/auth/login", json={"username": name, "password": "oldpass1"}).status_code == 401
+
+
+def test_forgot_password_does_not_reveal_unknown_emails(client):
+    res = client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+    assert res.status_code == 200 and "dev_code" not in res.json()

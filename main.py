@@ -822,7 +822,10 @@ class ResendOTPRequest(BaseModel):
 @app.post("/auth/forgot-password")
 def forgot_password(req: ForgotPasswordRequest, request: Request):
     rate_limit("auth", client_ip(request))
-    email = req.email.strip().lower()
+    return _issue_reset_code(req.email.strip().lower())
+
+def _issue_reset_code(email: str):
+    """Create a 10-minute reset code and email it (or return it in dev mode, when SMTP isn't set up)."""
     con = db()
     user = con.execute("SELECT id FROM users WHERE LOWER(email)=?", (email,)).fetchone()
     if not user:
@@ -831,7 +834,7 @@ def forgot_password(req: ForgotPasswordRequest, request: Request):
         return {"success": True, "message": "If that email exists, a code has been sent."}
 
     # Generate 6-digit OTP
-    code = str(random.randint(100000, 999999))
+    code = f"{secrets.randbelow(1_000_000):06d}"   # cryptographically secure, always 6 digits
     expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
 
     # Invalidate old OTPs for this email
@@ -879,8 +882,8 @@ def resend_otp(req: ResendOTPRequest, request: Request):
     if not user:
         return {"success": True}  # silent — don't leak email existence
 
-    # Reuse the forgot-password flow
-    return forgot_password(ForgotPasswordRequest(email=email))
+    # Same as forgot-password (the rate limit above already counted this request)
+    return _issue_reset_code(email)
 
 @app.post("/auth/reset-password")
 def reset_password(req: ResetPasswordRequest, request: Request):
