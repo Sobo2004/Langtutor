@@ -1,5 +1,7 @@
 # Russian-English Language Tutor 🇷🇺 ↔️ 🇬🇧
 
+[![CI](https://github.com/Sobo2004/Langtutor/actions/workflows/ci.yml/badge.svg)](https://github.com/Sobo2004/Langtutor/actions/workflows/ci.yml)
+
 A full-stack web application for learning Russian and English through interactive AI-powered conversations. Features gamification, progress tracking, quizzes, and an admin dashboard for monitoring user activity.
 
 ---
